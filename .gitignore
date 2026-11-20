@@ -1,0 +1,16 @@
+# Secretos y configuración local
+.env
+.env.*
+!.env.example
+
+# Dependencias y builds
+node_modules/
+vendor/
+dist/
+build/
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
