@@ -1,0 +1,53 @@
+sequenceDiagram
+  autonumber
+  participant S as SPA (Vue)
+  participant A as API Laravel
+  participant I as Servicio de importación
+  participant L as Limitador
+  participant F as FootballDataClient
+  participant D as PostgreSQL
+  participant X as football-data.org
+
+  S->>A: GET /competitions/{id} con token Bearer
+  A->>A: Passport valida el token (401) y el permiso de importar (403)
+  A->>I: importar la liga
+  I->>D: ¿Liga importada hace menos de 24 h?
+
+  alt Datos recientes
+    D-->>I: liga, equipos y jugadores guardados
+    I-->>A: datos locales
+  else Viejos o inexistentes
+    I->>L: ¿Hay cupo para 2 llamadas? (máx. 9 por minuto)
+    alt Sin cupo
+      L-->>I: no
+      alt Hay copia local
+        I-->>A: copia local marcada como desactualizada
+      else No hay copia
+        I-->>A: error 429 con Retry-After
+      end
+    else Con cupo
+      L-->>I: sí, cupo reservado
+      I->>F: pedir liga y equipos
+      F->>X: GET /v4/competitions/{id} y GET /v4/competitions/{id}/teams
+      alt Liga de pago (403)
+        X-->>F: 403
+        I-->>A: error 403, liga fuera del plan gratuito
+      else Liga inexistente (404)
+        X-->>F: 404
+        I-->>A: error 404
+      else Sin respuesta, error o límite externo
+        X-->>F: fallo
+        alt Hay copia local
+          I-->>A: copia local marcada como desactualizada
+        else No hay copia
+          I-->>A: error 502 o 503
+        end
+      else Respuesta correcta
+        X-->>F: liga, equipos y plantillas
+        F-->>I: datos de la liga
+        I->>D: transacción: guarda liga, equipos y jugadores (upsert)
+        I-->>A: datos recién guardados
+      end
+    end
+  end
+  A-->>S: respuesta JSON con el mismo formato (datos o error)
