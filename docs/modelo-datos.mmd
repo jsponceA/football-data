@@ -1,0 +1,66 @@
+erDiagram
+  COMPETITIONS ||--o{ COMPETITION_TEAM : "participa"
+  TEAMS ||--o{ COMPETITION_TEAM : "juega en"
+  TEAMS ||--o{ PLAYERS : "plantilla"
+  USERS }o--o{ ROLES : "model_has_roles"
+  ROLES }o--o{ PERMISSIONS : "role_has_permissions"
+
+  COMPETITIONS {
+    bigint id PK
+    int external_id UK "id de football-data"
+    string code
+    string name
+    string type
+    string emblem "nullable"
+    string plan "TIER_ONE, TIER_FOUR..."
+    string area_name
+    timestamp synced_at "ultima vez que se refresco la lista"
+    timestamp imported_at "ultima importacion de equipos, nullable"
+  }
+
+  TEAMS {
+    bigint id PK
+    int external_id UK "id de football-data"
+    string name
+    string short_name
+    string tla
+    string crest "nullable"
+    string venue "nullable"
+    int founded "nullable"
+  }
+
+  COMPETITION_TEAM {
+    bigint competition_id PK, FK
+    bigint team_id PK, FK
+  }
+
+  PLAYERS {
+    bigint id PK
+    int external_id UK "id de football-data"
+    bigint team_id FK
+    string name
+    string position "nullable"
+    int shirt_number "nullable, el plan gratuito no lo entrega"
+    date date_of_birth "nullable"
+    string nationality "nullable"
+  }
+
+  USERS {
+    bigint id PK
+    string name
+    string email UK
+    string password "hash"
+    boolean is_active "false = desactivado"
+  }
+
+  ROLES {
+    bigint id PK
+    string name UK
+    string guard_name
+  }
+
+  PERMISSIONS {
+    bigint id PK
+    string name UK
+    string guard_name
+  }
