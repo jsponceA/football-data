@@ -12,7 +12,7 @@ withDefaults(
     emptyText?: string
     emptyIcon?: string
     // forma del esqueleto mientras carga por primera vez: debe parecerse a lo que va a aparecer
-    skeleton?: 'table' | 'competitions' | 'teams' | 'players' | 'competition-detail' | 'team-detail'
+    skeleton?: 'table' | 'competitions' | 'teams' | 'players' | 'competition-detail' | 'team-detail' | 'form'
   }>(),
   { emptyTitle: 'No hay resultados', emptyText: '', emptyIcon: 'mdi-database-off-outline', skeleton: 'table' },
 )
@@ -30,6 +30,20 @@ defineEmits<{ retry: [] }>()
 
   <div v-else-if="loading && empty" role="status" aria-label="Cargando">
     <v-skeleton-loader v-if="skeleton === 'table'" type="table-thead, table-row@8" border />
+
+    <v-card v-else-if="skeleton === 'form'" border flat class="pa-5">
+      <div v-for="block in 2" :key="block" class="form-block">
+        <div class="form-block__head">
+          <SkelBlock w="180px" h="18px" />
+        </div>
+        <v-row>
+          <v-col v-for="n in 3" :key="n" cols="12" md="4">
+            <SkelBlock w="110px" h="12px" class="mb-2" />
+            <SkelBlock h="36px" r="4px" />
+          </v-col>
+        </v-row>
+      </div>
+    </v-card>
 
     <v-row v-else-if="skeleton === 'competitions'">
       <v-col v-for="n in 12" :key="n" cols="12" sm="6" md="4" xl="3">

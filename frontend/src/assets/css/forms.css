@@ -1,0 +1,140 @@
+/* formularios de alta y edición: bloques por tema separados con una línea */
+.form-block + .form-block {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.form-block__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+  margin-bottom: 12px;
+}
+
+.form-block__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.form-block__title .v-icon {
+  color: rgb(var(--v-theme-primary));
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.form-label__req {
+  margin-left: 2px;
+  color: rgb(var(--v-theme-error));
+}
+
+/* mismo tamaño compacto que los filtros: los inputs de Vuetify no tienen prop size */
+.form-field .v-input {
+  --v-input-control-height: 36px;
+  --v-input-padding-top: 0px;
+  font-size: 0.875rem;
+}
+
+.form-field .v-field {
+  --v-field-padding-top: 6px;
+  --v-field-padding-bottom: 6px;
+}
+
+/* foto de perfil: zona cuadrada que acepta clic y arrastrar */
+.photo-upload__zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 160px;
+  height: 160px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px dashed rgba(var(--v-border-color), 0.5);
+  border-radius: 12px;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.photo-upload__zone:hover,
+.photo-upload__zone:focus-visible,
+.photo-upload__zone--drag {
+  background: rgba(var(--v-theme-primary), 0.06);
+  border-color: rgb(var(--v-theme-primary));
+  outline: none;
+}
+
+.photo-upload__zone--error {
+  border-color: rgb(var(--v-theme-error));
+}
+
+.photo-upload__img {
+  width: 100%;
+  height: 100%;
+}
+
+.photo-upload__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+  font-size: 0.75rem;
+  text-align: center;
+  opacity: 0.75;
+}
+
+/* requisitos de la contraseña que se van marcando mientras se escribe */
+.pw-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 24px;
+  font-size: 0.8125rem;
+}
+
+.pw-rules__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.7;
+}
+
+.pw-rules__item--ok {
+  color: rgb(var(--v-theme-success));
+  opacity: 1;
+}
+
+.pw-rules--inline {
+  padding-top: 0;
+}
+
+@media (max-width: 959px) {
+  .pw-rules {
+    padding-top: 0;
+  }
+}
+
+/* matriz de permisos: una fila por sección, una columna por acción */
+.perm-table.v-table thead th {
+  background: rgb(var(--v-theme-surface-light));
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.perm-table .perm-cell {
+  width: 180px;
+  text-align: center;
+}
+
+.perm-table .perm-cell .v-selection-control {
+  justify-content: center;
+}

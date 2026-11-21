@@ -11,7 +11,7 @@ export function formatDate(value: string | null) {
 }
 
 export function formatDateTime(value: string | null) {
-  return value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—'
+  return value ? dayjs(value).format('DD/MM/YYYY hh:mm A') : '—'
 }
 
 // "hace 3 horas": se entiende mejor que una fecha para saber qué tan frescos están los datos

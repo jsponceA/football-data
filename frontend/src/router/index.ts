@@ -74,10 +74,43 @@ const router = createRouter({
           meta: { title: 'Usuarios', ability: { action: 'manage', subject: 'users' } },
         },
         {
+          path: 'users/new',
+          name: 'user-new',
+          component: () => import('@/views/UserFormView.vue'),
+          meta: { title: 'Nuevo usuario', section: 'users', ability: { action: 'manage', subject: 'users' } },
+        },
+        {
+          path: 'users/:id(\\d+)/edit',
+          name: 'user-edit',
+          component: () => import('@/views/UserFormView.vue'),
+          props: (route) => ({ id: Number(route.params.id) }),
+          meta: { title: 'Editar usuario', section: 'users', ability: { action: 'manage', subject: 'users' } },
+        },
+        {
           path: 'roles',
           name: 'roles',
           component: () => import('@/views/RolesView.vue'),
           meta: { title: 'Roles y permisos', ability: { action: 'manage', subject: 'roles' } },
+        },
+        {
+          path: 'roles/new',
+          name: 'role-new',
+          component: () => import('@/views/RoleFormView.vue'),
+          meta: { title: 'Nuevo rol', section: 'roles', ability: { action: 'manage', subject: 'roles' } },
+        },
+        {
+          path: 'roles/:id(\\d+)/edit',
+          name: 'role-edit',
+          component: () => import('@/views/RoleFormView.vue'),
+          props: (route) => ({ id: Number(route.params.id) }),
+          meta: { title: 'Editar rol', section: 'roles', ability: { action: 'manage', subject: 'roles' } },
+        },
+        {
+          // sin ability: cualquier usuario con sesión puede editar su propio perfil
+          path: 'profile',
+          name: 'profile',
+          component: () => import('@/views/ProfileView.vue'),
+          meta: { title: 'Mi perfil' },
         },
         {
           path: 'forbidden',

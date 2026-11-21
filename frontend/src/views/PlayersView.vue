@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAbility } from '@casl/vue'
 import { getPlayers } from '@/api/football'
 import DataState from '@/components/DataState.vue'
 import FilterBar from '@/components/FilterBar.vue'
@@ -7,10 +8,15 @@ import PageHeader from '@/components/PageHeader.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import PlayerCard from '@/components/PlayerCard.vue'
 import PerPageSelect from '@/components/PerPageSelect.vue'
+import TeamPicker from '@/components/TeamPicker.vue'
 import { usePaginatedList } from '@/composables/usePaginatedList'
+import type { AppAbility } from '@/plugins/ability'
 
 const { items, meta, page, perPage, filters, filtered, loading, error, load, apply, clear } =
-  usePaginatedList(getPlayers, { search: '' })
+  usePaginatedList(getPlayers, { search: '', team: null as number | null })
+
+// el listado de equipos solo lo ve quien tiene ese permiso; sin él el filtro no se ofrece
+const { can } = useAbility<AppAbility>()
 </script>
 
 <template>
@@ -26,6 +32,9 @@ const { items, meta, page, perPage, filters, filtered, loading, error, load, app
         density="compact"
         hide-details
       />
+    </FilterField>
+    <FilterField v-if="can('view', 'teams')" label="Equipo" wide>
+      <TeamPicker v-model="filters.team" />
     </FilterField>
   </FilterBar>
 

@@ -13,6 +13,7 @@ import * as directives from 'vuetify/directives'
 import './assets/css/login.css'
 import './assets/css/crud.css'
 import './assets/css/cards.css'
+import './assets/css/forms.css'
 
 import { createPinia } from 'pinia'
 import { createPersistedState } from 'pinia-plugin-persistedstate'

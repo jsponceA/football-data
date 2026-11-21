@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { getRoles, getUsers } from '@/api/admin'
+import { getRoles, getUsers, setUserActive } from '@/api/admin'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import CrudTable from '@/components/CrudTable.vue'
 import DataState from '@/components/DataState.vue'
 import FilterBar from '@/components/FilterBar.vue'
@@ -8,35 +9,60 @@ import FilterField from '@/components/FilterField.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import PerPageSelect from '@/components/PerPageSelect.vue'
-import UserFormDialog from '@/components/UserFormDialog.vue'
+import { useNotify } from '@/composables/useNotify'
 import { usePaginatedList } from '@/composables/usePaginatedList'
+import { useAuthStore } from '@/stores/auth'
 import type { ManagedUser } from '@/types/api'
-import { formatDateTime } from '@/utils/format'
+import { errorMessage, formatDateTime } from '@/utils/format'
 
 const { items, meta, page, perPage, filters, filtered, loading, error, load, apply, clear } =
   usePaginatedList(getUsers, { search: '', role: null as string | null })
+const { notify } = useNotify()
+const auth = useAuthStore()
+
+const toDeactivate = ref<ManagedUser | null>(null)
+// id del usuario cuyo estado se está cambiando, para bloquear su botón mientras tanto
+const changing = ref<number | null>(null)
+
+async function changeStatus(user: ManagedUser, active: boolean) {
+  changing.value = user.id
+  try {
+    await setUserActive(user.id, active)
+    notify(active ? `${user.name} quedó activo.` : `${user.name} quedó desactivado.`)
+    toDeactivate.value = null
+    load()
+  } catch (e) {
+    notify(errorMessage(e), 'error')
+    toDeactivate.value = null
+  } finally {
+    changing.value = null
+  }
+}
+
+// activar no tiene riesgo y va directo; desactivar cierra sus sesiones, así que pide confirmación
+function toggle(user: ManagedUser) {
+  if (user.is_active) {
+    toDeactivate.value = user
+  } else {
+    changeStatus(user, true)
+  }
+}
 
 const roleNames = ref<string[]>([])
-const dialog = ref(false)
-const editing = ref<ManagedUser | null>(null)
 
+// los roles solo hacen falta para el filtro; el formulario los pide por su cuenta
 onMounted(async () => {
   try {
     roleNames.value = (await getRoles({ per_page: 100 })).data.map((r) => r.name)
   } catch {
-    // sin roles el formulario no se puede usar, pero la lista sí; el error real saldrá al guardar
+    // sin roles el filtro queda vacío, la lista sigue funcionando
   }
 })
-
-function openForm(user: ManagedUser | null) {
-  editing.value = user
-  dialog.value = true
-}
 </script>
 
 <template>
   <PageHeader :crumbs="[{ title: 'Usuarios' }]">
-    <v-btn color="primary" prepend-icon="mdi-account-plus-outline" @click="openForm(null)">
+    <v-btn color="primary" prepend-icon="mdi-account-plus-outline" :to="{ name: 'user-new' }">
       Nuevo usuario
     </v-btn>
   </PageHeader>
@@ -100,13 +126,26 @@ function openForm(user: ManagedUser | null) {
                 color="warning"
                 rounded="lg"
                 :aria-label="`Editar ${user.name}`"
-                @click="openForm(user)"
+                :to="{ name: 'user-edit', params: { id: user.id } }"
+              />
+              <v-btn
+                :icon="user.is_active ? 'mdi-account-off-outline' : 'mdi-account-check-outline'"
+                size="x-small"
+                variant="tonal"
+                :color="user.is_active ? 'error' : 'success'"
+                rounded="lg"
+                :loading="changing === user.id"
+                :disabled="user.id === auth.user?.id"
+                :aria-label="`${user.is_active ? 'Desactivar' : 'Activar'} ${user.name}`"
+                :title="user.id === auth.user?.id ? 'No puedes desactivar tu propio usuario' : user.is_active ? 'Desactivar' : 'Activar'"
+                @click="toggle(user)"
               />
             </div>
           </td>
           <td class="text-no-wrap">
             <v-avatar size="32" color="primary" variant="tonal" class="mr-2">
-              {{ user.name.charAt(0).toUpperCase() }}
+              <v-img v-if="user.photo_url" :src="user.photo_url" :alt="user.name" cover />
+              <template v-else>{{ user.name.charAt(0).toUpperCase() }}</template>
             </v-avatar>
             {{ user.name }}
           </td>
@@ -126,5 +165,16 @@ function openForm(user: ManagedUser | null) {
     <PaginationBar v-model="page" :meta="meta" />
   </DataState>
 
-  <UserFormDialog v-model="dialog" :user="editing" :roles="roleNames" @saved="load" />
+  <ConfirmDialog
+    :model-value="toDeactivate !== null"
+    title="Desactivar usuario"
+    confirm-text="Desactivar"
+    icon="mdi-account-off-outline"
+    :loading="changing !== null"
+    @update:model-value="toDeactivate = null"
+    @confirm="toDeactivate && changeStatus(toDeactivate, false)"
+  >
+    <strong>{{ toDeactivate?.name }}</strong> no podrá iniciar sesión y se cerrarán sus sesiones abiertas.
+    Puedes volver a activarlo cuando quieras.
+  </ConfirmDialog>
 </template>

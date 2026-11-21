@@ -72,6 +72,21 @@ async function logout() {
         <v-tooltip v-if="isRail" activator="parent" location="end" :text="section.title" />
       </v-list-item>
     </v-list>
+
+    <!-- lo personal va aparte de las secciones del sistema y no depende de permisos -->
+    <template #append>
+      <v-divider />
+      <v-list nav density="comfortable">
+        <v-list-item
+          :to="{ name: 'profile' }"
+          prepend-icon="mdi-account-circle-outline"
+          title="Mi perfil"
+          rounded="lg"
+        >
+          <v-tooltip v-if="isRail" activator="parent" location="end" text="Mi perfil" />
+        </v-list-item>
+      </v-list>
+    </template>
   </v-navigation-drawer>
 
   <v-app-bar flat border="b">
@@ -86,12 +101,18 @@ async function logout() {
       variant="text"
       aria-label="Personalizar"
       title="Personalizar"
-      @click="settings = true"
+      @click="settings = !settings"
     />
 
     <v-menu>
       <template #activator="{ props }">
-        <v-btn v-bind="props" variant="text" prepend-icon="mdi-account-circle" class="mr-2">
+        <v-btn v-bind="props" variant="text" class="mr-2">
+          <template #prepend>
+            <v-avatar size="26" color="primary" variant="tonal">
+              <v-img v-if="auth.user?.photo_url" :src="auth.user.photo_url" alt="" cover />
+              <v-icon v-else icon="mdi-account" size="18" />
+            </v-avatar>
+          </template>
           <span class="d-none d-sm-inline">{{ auth.user?.name }}</span>
         </v-btn>
       </template>
@@ -105,6 +126,7 @@ async function logout() {
         </v-card-text>
         <v-divider />
         <v-list density="compact">
+          <v-list-item prepend-icon="mdi-account-edit-outline" title="Mi perfil" :to="{ name: 'profile' }" />
           <v-list-item prepend-icon="mdi-logout" title="Cerrar sesión" @click="logout" />
         </v-list>
       </v-card>

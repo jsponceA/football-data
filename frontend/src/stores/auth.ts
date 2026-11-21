@@ -45,13 +45,18 @@ export const useAuthStore = defineStore(
       clear()
     }
 
+    // tras editar el perfil la respuesta ya trae al usuario completo
+    function setUser(value: SessionUser) {
+      applyUser(value)
+    }
+
     function clear() {
       token.value = null
       refreshed.value = false
       applyUser(null)
     }
 
-    return { token, user, refreshed, isLoggedIn, login, refresh, logout, clear }
+    return { token, user, refreshed, isLoggedIn, login, refresh, setUser, logout, clear }
   },
   {
     persist: { pick: ['token', 'user'] },

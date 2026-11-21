@@ -11,6 +11,7 @@ export interface SessionUser {
   name: string
   email: string
   is_active: boolean
+  photo_url?: string | null
   roles: string[]
   permissions: string[]
   abilities: AbilityRule[]
@@ -63,6 +64,7 @@ export interface ManagedUser {
   name: string
   email: string
   is_active: boolean
+  photo_url: string | null
   roles: string[]
   created_at: string | null
 }
