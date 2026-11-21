@@ -55,21 +55,38 @@ Hace falta un token de football-data.org. Se pide gratis en
 
 ### Opción A: con Docker (la más corta)
 
-Requisitos: Docker con Compose.
+Requisitos: Git y Docker con Compose (en Windows, Docker Desktop). No hace falta tener PHP, Node ni PostgreSQL.
+
+**1. Clona el repositorio**
+
+```bash
+git clone https://github.com/jsponceA/football-data.git
+cd football-data
+```
+
+**2. Crea el archivo de variables y pega el token**
 
 ```bash
 cp .env.example .env
 ```
 
-Abre `.env` y pega el token en `FOOTBALL_DATA_TOKEN`. Lo demás ya viene listo para usar en local. Después:
+En PowerShell, `cp` también funciona. Abre `.env` con cualquier editor y pega el token en la línea
+`FOOTBALL_DATA_TOKEN=`. Lo demás ya viene listo para usar en local.
+
+**3. Levanta todo**
 
 ```bash
 docker compose up --build
 ```
 
-La primera vez tarda unos minutos porque construye las imágenes. Al arrancar, el contenedor de la API crea las llaves
-de Passport, ejecuta las migraciones y carga los seeders sin que tengas que hacer nada más. Los seeders solo corren
-cuando la base de datos está vacía, así que reiniciar los contenedores no restablece las contraseñas de los usuarios.
+La primera vez tarda unos minutos, porque descarga las imágenes e instala las dependencias. Está listo cuando en los
+registros aparece `ready to handle connections`. Para dejar la terminal libre, usa `docker compose up -d --build`.
+
+Al arrancar, el contenedor de la API crea las llaves de Passport, ejecuta las migraciones y carga los seeders sin que
+tengas que hacer nada más. Los seeders solo corren cuando la base de datos está vacía, así que reiniciar los
+contenedores no restablece las contraseñas de los usuarios.
+
+**4. Pruébalo**
 
 | Qué | Dirección |
 | --- | --- |
@@ -77,7 +94,21 @@ cuando la base de datos está vacía, así que reiniciar los contenedores no res
 | API | <http://localhost:8000/api> |
 | Documentación de la API | <http://localhost:8000/docs/api> |
 
-Para apagarlo: `docker compose down`. Para borrar también la base de datos y las fotos: `docker compose down -v`.
+Entra a la aplicación con `admin@example.com` y `password` (ver [usuarios de prueba](#2-usuarios-de-prueba)). Para
+comprobar que todo funciona: la pantalla de Ligas debe mostrar las ligas y, al abrir una (por ejemplo la Premier
+League), se importan sus equipos y jugadores.
+
+Si algo no arranca:
+- **Puerto ocupado.** Si ya usas el 8080 o el 8000 (por ejemplo, con `php artisan serve`), detén eso o cambia
+  `FRONT_PORT` y `API_PORT` en el `.env`. Si cambias el puerto de la API, ajusta también `APP_URL`.
+- **Errores de la API.** Se ven con `docker compose logs app`.
+
+**5. Apagar y limpiar**
+
+```bash
+docker compose down        # detiene y elimina los contenedores; conserva la base de datos y las fotos
+docker compose down -v     # además borra la base de datos y las fotos
+```
 
 ### Opción B: sin Docker
 
