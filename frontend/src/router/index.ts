@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocationRaw } from 'vue-router'
 import { ability } from '@/plugins/ability'
 import { useAuthStore } from '@/stores/auth'
 import type { Action, Subject } from '@/types/api'
@@ -149,6 +149,13 @@ const router = createRouter({
   ],
 })
 
+// a donde se manda a quien tenía sesión y el servidor ya no la acepta: el login avisa por qué
+// y, tras entrar de nuevo, la persona vuelve a la página en la que estaba
+export function expiredSessionLocation(from: string): RouteLocationRaw {
+  const comesFromHome = from === '/' || from.startsWith('/login')
+  return { name: 'login', query: comesFromHome ? { expired: '1' } : { expired: '1', redirect: from } }
+}
+
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
 
@@ -168,7 +175,7 @@ router.beforeEach(async (to) => {
   if (!auth.refreshed) {
     await auth.refresh()
     if (!auth.isLoggedIn) {
-      return { name: 'login' }
+      return expiredSessionLocation(to.fullPath)
     }
   }
 

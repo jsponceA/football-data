@@ -20,7 +20,7 @@ import { createPersistedState } from 'pinia-plugin-persistedstate'
 import { abilitiesPlugin } from '@casl/vue'
 
 import App from './App.vue'
-import router from './router'
+import router, { expiredSessionLocation } from './router'
 import { setAuthHandlers } from './api/http'
 import { applyAppearance } from './composables/useAppearance'
 import { ability } from './plugins/ability'
@@ -62,8 +62,10 @@ setAuthHandlers({
   getToken: () => auth.token,
   onUnauthorized: () => {
     auth.clear()
-    if (router.currentRoute.value.name !== 'login') {
-      router.push({ name: 'login' })
+    const current = router.currentRoute.value
+    // en las pantallas de visitantes (login, registro...) no hay nada que avisar
+    if (!current.meta.guest && !current.meta.public) {
+      router.push(expiredSessionLocation(current.fullPath))
     }
   },
 })

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { SubmitEventPromise } from 'vuetify'
 import AuthShell from '@/components/AuthShell.vue'
@@ -10,6 +10,9 @@ import { emailFormat, required } from '@/utils/rules'
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
+
+// el router manda aquí con ?expired=1 cuando el servidor ya no acepta la sesión
+const sessionExpired = computed(() => route.query.expired === '1')
 
 const form = reactive({ email: '', password: '' })
 const showPassword = ref(false)
@@ -29,6 +32,16 @@ function submit(event: SubmitEventPromise) {
   <AuthShell title="Bienvenido" subtitle="Ingresa con tu cuenta para continuar.">
     <v-alert v-if="error" type="error" variant="tonal" class="mb-6" density="comfortable">
       {{ error }}
+    </v-alert>
+    <v-alert
+      v-else-if="sessionExpired"
+      type="warning"
+      variant="tonal"
+      icon="mdi-clock-alert-outline"
+      class="mb-6"
+      density="comfortable"
+    >
+      Tu sesión venció. Inicia sesión de nuevo para continuar.
     </v-alert>
 
     <v-form validate-on="submit lazy" @submit.prevent="submit">

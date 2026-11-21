@@ -116,6 +116,14 @@ describe('sesión vencida', () => {
     expect(error.message).toBe('Correo o contraseña incorrectos.')
   })
 
+  it('un 401 al cerrar sesión no avisa de sesión vencida: la persona quería salir', async () => {
+    respond(401, { message: 'No autenticado.' })
+
+    await http.post('/logout').catch(() => {})
+
+    expect(onUnauthorized).not.toHaveBeenCalled()
+  })
+
   it('un 403 no cierra la sesión: es falta de permiso, no de sesión', async () => {
     respond(403, { message: 'Sin permiso.' })
 

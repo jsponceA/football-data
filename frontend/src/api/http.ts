@@ -47,8 +47,9 @@ http.interceptors.response.use(
 
     const { status, data, headers, config } = error.response
 
-    // un 401 con token enviado = sesión vencida; en el login no hay token y es solo "credenciales malas"
-    if (status === 401 && config.headers.Authorization) {
+    // un 401 con token enviado = sesión vencida; en el login no hay token y es solo "credenciales malas".
+    // Al cerrar sesión con un token ya vencido no hay nada que avisar: la persona quería salir
+    if (status === 401 && config.headers.Authorization && config.url !== '/logout') {
       handlers.onUnauthorized()
     }
 

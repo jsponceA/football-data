@@ -4,7 +4,7 @@ import * as authApi from '@/api/auth'
 import { ability } from '@/plugins/ability'
 import type { SessionUser } from '@/types/api'
 import { useAuthStore } from '@/stores/auth'
-import router from '../index'
+import router, { expiredSessionLocation } from '../index'
 
 vi.mock('@/api/auth', () => ({ login: vi.fn(), logout: vi.fn(), me: vi.fn() }))
 
@@ -187,6 +187,22 @@ describe('primera carga de la página', () => {
     await router.push('/teams')
 
     expect(router.currentRoute.value.name).toBe('login')
+    // el login sabrá avisar que fue por sesión vencida y a dónde volver
+    expect(router.currentRoute.value.query).toEqual({ expired: '1', redirect: '/teams' })
+  })
+})
+
+describe('sesión vencida', () => {
+  it('guarda la página en la que estaba para volver después de entrar', () => {
+    expect(expiredSessionLocation('/players?search=messi')).toEqual({
+      name: 'login',
+      query: { expired: '1', redirect: '/players?search=messi' },
+    })
+  })
+
+  it('desde el inicio o el login no hay a dónde volver', () => {
+    expect(expiredSessionLocation('/')).toEqual({ name: 'login', query: { expired: '1' } })
+    expect(expiredSessionLocation('/login?expired=1')).toEqual({ name: 'login', query: { expired: '1' } })
   })
 })
 
