@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PwaStatus from '@/components/PwaStatus.vue'
 import { notification } from '@/composables/useNotify'
 </script>
 
@@ -8,5 +9,6 @@ import { notification } from '@/composables/useNotify'
     <v-snackbar v-model="notification.show" :color="notification.color" :timeout="4000">
       {{ notification.text }}
     </v-snackbar>
+    <pwa-status />
   </v-app>
 </template>
