@@ -20,6 +20,7 @@ usePageTitle(() => team.value?.name)
     :loading="loading"
     :error="error"
     :empty="!team"
+    skeleton="detail"
     empty-title="Equipo no encontrado"
     @retry="load"
   >

@@ -23,6 +23,7 @@ const stale = computed(() => meta.value?.stale === true)
     :loading="loading"
     :error="error"
     :empty="items.length === 0"
+    skeleton="cards"
     empty-title="No hay ligas"
     empty-text="Todavía no se pudo cargar el listado de ligas."
     empty-icon="mdi-trophy-outline"

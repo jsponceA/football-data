@@ -112,8 +112,8 @@ async function logout() {
       <router-view />
     </v-container>
 
-    <v-footer border height="44" class="flex-grow-0 flex-shrink-0 text-caption text-medium-emphasis">
-      <div class="d-flex justify-end w-100 px-2">
+    <v-footer border height="32" class="flex-grow-0 flex-shrink-0 py-0 text-caption text-medium-emphasis">
+      <div class="d-flex justify-end w-100">
         © {{ year }} Football Data. Todos los derechos reservados.
       </div>
     </v-footer>

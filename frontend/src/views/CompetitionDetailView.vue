@@ -27,6 +27,7 @@ const teams = computed(() => competition.value?.teams ?? [])
     :loading="loading"
     :error="error"
     :empty="!competition"
+    skeleton="detail"
     empty-title="Liga no encontrada"
     @retry="load"
   >

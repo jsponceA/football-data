@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { deleteRole, getPermissions, getRoles } from '@/api/admin'
+import CrudTable from '@/components/CrudTable.vue'
 import DataState from '@/components/DataState.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
@@ -75,57 +76,52 @@ async function confirmDelete() {
       <PerPageSelect v-model="perPage" />
     </div>
 
-    <v-card border flat>
-      <v-progress-linear :active="loading" indeterminate />
-      <div style="overflow-x: auto">
-        <v-table class="crud-table">
-          <thead>
-            <tr>
-              <th>Acciones</th>
-              <th>Rol</th>
-              <th>Permisos</th>
-              <th class="text-right">Usuarios</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="role in items" :key="role.id">
-              <td>
-                <div class="row-actions">
-                  <v-btn
-                    v-if="!role.protected"
-                    icon="mdi-pencil-outline"
-                    size="x-small"
-                    variant="tonal"
-                    color="warning"
-                    rounded="lg"
-                    :aria-label="`Editar ${role.name}`"
-                    @click="openForm(role)"
-                  />
-                  <v-btn
-                    v-if="!role.protected"
-                    icon="mdi-delete-outline"
-                    size="x-small"
-                    variant="tonal"
-                    color="error"
-                    rounded="lg"
-                    :aria-label="`Eliminar ${role.name}`"
-                    @click="toDelete = role"
-                  />
-                  <v-icon v-else icon="mdi-lock-outline" size="small" title="Rol protegido" class="ml-2" />
-                </div>
-              </td>
-              <td class="text-no-wrap">{{ role.name }}</td>
-              <td class="py-2">
-                <v-chip v-for="name in role.permissions" :key="name" size="small" class="mr-1 mb-1">
-                  {{ describePermission(name).subject }}: {{ describePermission(name).action }}
-                </v-chip>
-              </td>
-              <td class="text-right">{{ role.users_count ?? 0 }}</td>
-            </tr>
-          </tbody>
-        </v-table>
-      </div>
-    </v-card>
+    <CrudTable :loading="loading">
+      <thead>
+        <tr>
+          <th>Acciones</th>
+          <th>Rol</th>
+          <th>Permisos</th>
+          <th class="text-right">Usuarios</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="role in items" :key="role.id">
+          <td>
+            <div class="row-actions">
+              <v-btn
+                v-if="!role.protected"
+                icon="mdi-pencil-outline"
+                size="x-small"
+                variant="tonal"
+                color="warning"
+                rounded="lg"
+                :aria-label="`Editar ${role.name}`"
+                @click="openForm(role)"
+              />
+              <v-btn
+                v-if="!role.protected"
+                icon="mdi-delete-outline"
+                size="x-small"
+                variant="tonal"
+                color="error"
+                rounded="lg"
+                :aria-label="`Eliminar ${role.name}`"
+                @click="toDelete = role"
+              />
+              <v-icon v-else icon="mdi-lock-outline" size="small" title="Rol protegido" class="ml-2" />
+            </div>
+          </td>
+          <td class="text-no-wrap">{{ role.name }}</td>
+          <td class="py-2">
+            <v-chip v-for="name in role.permissions" :key="name" size="small" class="mr-1 mb-1">
+              {{ describePermission(name).subject }}: {{ describePermission(name).action }}
+            </v-chip>
+          </td>
+          <td class="text-right">{{ role.users_count ?? 0 }}</td>
+        </tr>
+      </tbody>
+    </CrudTable>
     <PaginationBar v-model="page" :meta="meta" />
   </DataState>
 

@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useAbility } from '@casl/vue'
 import { getCompetitions, getTeams } from '@/api/football'
+import CrudTable from '@/components/CrudTable.vue'
 import DataState from '@/components/DataState.vue'
 import FilterBar from '@/components/FilterBar.vue'
 import FilterField from '@/components/FilterField.vue'
@@ -69,51 +70,46 @@ onMounted(async () => {
       <PerPageSelect v-model="perPage" />
     </div>
 
-    <v-card border flat>
-      <v-progress-linear :active="loading" indeterminate />
-      <div style="overflow-x: auto">
-        <v-table class="crud-table">
-          <thead>
-            <tr>
-              <th>Acciones</th>
-              <th>Equipo</th>
-              <th>Abrev.</th>
-              <th>Estadio</th>
-              <th>Fundado</th>
-              <th class="text-right">Jugadores</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="team in items" :key="team.id">
-              <td>
-                <div class="row-actions">
-                  <v-btn
-                    icon="mdi-eye-outline"
-                    size="x-small"
-                    variant="tonal"
-                    color="info"
-                    rounded="lg"
-                    :to="{ name: 'team', params: { id: team.id } }"
-                    :aria-label="`Ver ${team.name}`"
-                  />
-                </div>
-              </td>
-              <td class="text-no-wrap">
-                <v-avatar rounded="0" size="28" class="mr-2">
-                  <v-img v-if="team.crest" :src="team.crest" :alt="team.name" contain />
-                  <v-icon v-else icon="mdi-shield-half-full" />
-                </v-avatar>
-                {{ team.name }}
-              </td>
-              <td>{{ team.tla ?? '—' }}</td>
-              <td>{{ team.venue ?? '—' }}</td>
-              <td>{{ team.founded ?? '—' }}</td>
-              <td class="text-right">{{ team.players_count ?? 0 }}</td>
-            </tr>
-          </tbody>
-        </v-table>
-      </div>
-    </v-card>
+    <CrudTable :loading="loading">
+      <thead>
+        <tr>
+          <th>Acciones</th>
+          <th>Equipo</th>
+          <th>Abrev.</th>
+          <th>Estadio</th>
+          <th>Fundado</th>
+          <th class="text-right">Jugadores</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="team in items" :key="team.id">
+          <td>
+            <div class="row-actions">
+              <v-btn
+                icon="mdi-eye-outline"
+                size="x-small"
+                variant="tonal"
+                color="info"
+                rounded="lg"
+                :to="{ name: 'team', params: { id: team.id } }"
+                :aria-label="`Ver ${team.name}`"
+              />
+            </div>
+          </td>
+          <td class="text-no-wrap">
+            <v-avatar rounded="0" size="28" class="mr-2">
+              <v-img v-if="team.crest" :src="team.crest" :alt="team.name" contain />
+              <v-icon v-else icon="mdi-shield-half-full" />
+            </v-avatar>
+            {{ team.name }}
+          </td>
+          <td>{{ team.tla ?? '—' }}</td>
+          <td>{{ team.venue ?? '—' }}</td>
+          <td>{{ team.founded ?? '—' }}</td>
+          <td class="text-right">{{ team.players_count ?? 0 }}</td>
+        </tr>
+      </tbody>
+    </CrudTable>
     <PaginationBar v-model="page" :meta="meta" />
   </DataState>
 </template>

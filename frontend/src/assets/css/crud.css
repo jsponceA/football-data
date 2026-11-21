@@ -59,6 +59,11 @@
   white-space: nowrap;
 }
 
+/* tope de alto para que la paginación no se vaya al fondo con 30 o 50 filas */
+.crud-table .v-table__wrapper {
+  max-height: max(320px, calc(100vh - 340px));
+}
+
 .row-actions {
   display: flex;
   gap: 6px;

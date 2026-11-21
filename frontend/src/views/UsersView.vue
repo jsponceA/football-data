@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { getRoles, getUsers } from '@/api/admin'
+import CrudTable from '@/components/CrudTable.vue'
 import DataState from '@/components/DataState.vue'
 import FilterBar from '@/components/FilterBar.vue'
 import FilterField from '@/components/FilterField.vue'
@@ -77,56 +78,51 @@ function openForm(user: ManagedUser | null) {
       <PerPageSelect v-model="perPage" />
     </div>
 
-    <v-card border flat>
-      <v-progress-linear :active="loading" indeterminate />
-      <div style="overflow-x: auto">
-        <v-table class="crud-table">
-          <thead>
-            <tr>
-              <th>Acciones</th>
-              <th>Usuario</th>
-              <th>Correo</th>
-              <th>Roles</th>
-              <th>Estado</th>
-              <th>Creado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="user in items" :key="user.id">
-              <td>
-                <div class="row-actions">
-                  <v-btn
-                    icon="mdi-pencil-outline"
-                    size="x-small"
-                    variant="tonal"
-                    color="warning"
-                    rounded="lg"
-                    :aria-label="`Editar ${user.name}`"
-                    @click="openForm(user)"
-                  />
-                </div>
-              </td>
-              <td class="text-no-wrap">
-                <v-avatar size="32" color="primary" variant="tonal" class="mr-2">
-                  {{ user.name.charAt(0).toUpperCase() }}
-                </v-avatar>
-                {{ user.name }}
-              </td>
-              <td>{{ user.email }}</td>
-              <td>
-                <v-chip v-for="role in user.roles" :key="role" size="small" class="mr-1">{{ role }}</v-chip>
-              </td>
-              <td>
-                <v-chip size="small" :color="user.is_active ? 'success' : undefined">
-                  {{ user.is_active ? 'Activo' : 'Inactivo' }}
-                </v-chip>
-              </td>
-              <td class="text-no-wrap">{{ formatDateTime(user.created_at) }}</td>
-            </tr>
-          </tbody>
-        </v-table>
-      </div>
-    </v-card>
+    <CrudTable :loading="loading">
+      <thead>
+        <tr>
+          <th>Acciones</th>
+          <th>Usuario</th>
+          <th>Correo</th>
+          <th>Roles</th>
+          <th>Estado</th>
+          <th>Creado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="user in items" :key="user.id">
+          <td>
+            <div class="row-actions">
+              <v-btn
+                icon="mdi-pencil-outline"
+                size="x-small"
+                variant="tonal"
+                color="warning"
+                rounded="lg"
+                :aria-label="`Editar ${user.name}`"
+                @click="openForm(user)"
+              />
+            </div>
+          </td>
+          <td class="text-no-wrap">
+            <v-avatar size="32" color="primary" variant="tonal" class="mr-2">
+              {{ user.name.charAt(0).toUpperCase() }}
+            </v-avatar>
+            {{ user.name }}
+          </td>
+          <td>{{ user.email }}</td>
+          <td>
+            <v-chip v-for="role in user.roles" :key="role" size="small" class="mr-1">{{ role }}</v-chip>
+          </td>
+          <td>
+            <v-chip size="small" :color="user.is_active ? 'success' : undefined">
+              {{ user.is_active ? 'Activo' : 'Inactivo' }}
+            </v-chip>
+          </td>
+          <td class="text-no-wrap">{{ formatDateTime(user.created_at) }}</td>
+        </tr>
+      </tbody>
+    </CrudTable>
     <PaginationBar v-model="page" :meta="meta" />
   </DataState>
 
