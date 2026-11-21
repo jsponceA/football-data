@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { getCompetition } from '@/api/football'
 import DataState from '@/components/DataState.vue'
 import PageHeader from '@/components/PageHeader.vue'
+import { usePageTitle } from '@/composables/usePageTitle'
 import { useRequest } from '@/composables/useRequest'
 import { formatDateTime } from '@/utils/format'
 
@@ -12,6 +13,8 @@ const props = defineProps<{ id: number }>()
 const { data, loading, error, load } = useRequest(() => getCompetition(props.id))
 
 const competition = computed(() => data.value?.data)
+usePageTitle(() => competition.value?.name)
+
 const teams = computed(() => competition.value?.teams ?? [])
 </script>
 

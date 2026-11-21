@@ -2,12 +2,14 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { ability } from '@/plugins/ability'
 import { useAuthStore } from '@/stores/auth'
 import type { Action, Subject } from '@/types/api'
+import { pageTitle } from '@/composables/usePageTitle'
 import { sections } from './navigation'
 
 declare module 'vue-router' {
   interface RouteMeta {
     // solo para visitantes (login)
     guest?: boolean
+    title?: string
     ability?: { action: Action; subject: Subject }
   }
 }
@@ -19,59 +21,74 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('@/views/LoginView.vue'),
-      meta: { guest: true },
+      meta: { guest: true, title: 'Iniciar sesión' },
     },
     {
       path: '/',
       component: () => import('@/layouts/AppLayout.vue'),
       children: [
-        { path: '', name: 'home', component: () => import('@/views/HomeView.vue') },
+        {
+          path: '',
+          name: 'home',
+          component: () => import('@/views/HomeView.vue'),
+          meta: { title: 'Inicio' },
+        },
         {
           path: 'competitions',
           name: 'competitions',
           component: () => import('@/views/CompetitionsView.vue'),
-          meta: { ability: { action: 'view', subject: 'competitions' } },
+          meta: { title: 'Ligas', ability: { action: 'view', subject: 'competitions' } },
         },
         {
           path: 'competitions/:id(\\d+)',
           name: 'competition',
           component: () => import('@/views/CompetitionDetailView.vue'),
           props: (route) => ({ id: Number(route.params.id) }),
-          meta: { ability: { action: 'view', subject: 'competitions' } },
+          meta: { title: 'Liga', ability: { action: 'view', subject: 'competitions' } },
         },
         {
           path: 'teams',
           name: 'teams',
           component: () => import('@/views/TeamsView.vue'),
-          meta: { ability: { action: 'view', subject: 'teams' } },
+          meta: { title: 'Equipos', ability: { action: 'view', subject: 'teams' } },
         },
         {
           path: 'teams/:id(\\d+)',
           name: 'team',
           component: () => import('@/views/TeamDetailView.vue'),
           props: (route) => ({ id: Number(route.params.id) }),
-          meta: { ability: { action: 'view', subject: 'teams' } },
+          meta: { title: 'Equipo', ability: { action: 'view', subject: 'teams' } },
         },
         {
           path: 'players',
           name: 'players',
           component: () => import('@/views/PlayersView.vue'),
-          meta: { ability: { action: 'view', subject: 'players' } },
+          meta: { title: 'Jugadores', ability: { action: 'view', subject: 'players' } },
         },
         {
           path: 'users',
           name: 'users',
           component: () => import('@/views/UsersView.vue'),
-          meta: { ability: { action: 'manage', subject: 'users' } },
+          meta: { title: 'Usuarios', ability: { action: 'manage', subject: 'users' } },
         },
         {
           path: 'roles',
           name: 'roles',
           component: () => import('@/views/RolesView.vue'),
-          meta: { ability: { action: 'manage', subject: 'roles' } },
+          meta: { title: 'Roles y permisos', ability: { action: 'manage', subject: 'roles' } },
         },
-        { path: 'forbidden', name: 'forbidden', component: () => import('@/views/ForbiddenView.vue') },
-        { path: ':pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue') },
+        {
+          path: 'forbidden',
+          name: 'forbidden',
+          component: () => import('@/views/ForbiddenView.vue'),
+          meta: { title: 'Sin acceso' },
+        },
+        {
+          path: ':pathMatch(.*)*',
+          name: 'not-found',
+          component: () => import('@/views/NotFoundView.vue'),
+          meta: { title: 'Página no encontrada' },
+        },
       ],
     },
   ],
@@ -110,6 +127,10 @@ router.beforeEach(async (to) => {
   }
 
   return true
+})
+
+router.afterEach((to) => {
+  document.title = pageTitle(to.meta.title)
 })
 
 export default router

@@ -2,12 +2,15 @@
 import { getTeam } from '@/api/football'
 import DataState from '@/components/DataState.vue'
 import PageHeader from '@/components/PageHeader.vue'
+import { usePageTitle } from '@/composables/usePageTitle'
 import { useRequest } from '@/composables/useRequest'
 import { formatDate, positionLabel } from '@/utils/format'
 
 const props = defineProps<{ id: number }>()
 
 const { data: team, loading, error, load } = useRequest(() => getTeam(props.id))
+
+usePageTitle(() => team.value?.name)
 </script>
 
 <template>

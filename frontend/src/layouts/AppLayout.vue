@@ -3,8 +3,10 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { useAbility } from '@casl/vue'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 import { useAuthStore } from '@/stores/auth'
 import { sections } from '@/router/navigation'
+import logo from '@/assets/img/logo.webp'
 import type { AppAbility } from '@/plugins/ability'
 
 const auth = useAuthStore()
@@ -25,12 +27,13 @@ async function logout() {
 
 <template>
   <v-navigation-drawer v-model="drawer">
-    <v-list-item
-      title="Football Data"
-      subtitle="Ligas, equipos y jugadores"
-      prepend-icon="mdi-soccer"
-      class="py-3"
-    />
+    <v-list-item title="Football Data" subtitle="Ligas, equipos y jugadores" class="py-3">
+      <template #prepend>
+        <v-avatar color="primary" size="40" class="mr-3">
+          <img :src="logo" alt="" width="34" height="34" />
+        </v-avatar>
+      </template>
+    </v-list-item>
     <v-divider />
     <v-list nav density="comfortable">
       <v-list-item
@@ -47,6 +50,7 @@ async function logout() {
   <v-app-bar flat border="b">
     <v-app-bar-nav-icon v-if="mobile" aria-label="Abrir menú" @click="drawer = !drawer" />
     <v-spacer />
+    <ThemeToggle />
 
     <v-menu>
       <template #activator="{ props }">

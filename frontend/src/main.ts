@@ -8,6 +8,9 @@ import { es } from 'vuetify/locale'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
+// va después de Vuetify para que mis reglas ganen cuando empatan en especificidad
+import './assets/css/login.css'
+
 import { createPinia } from 'pinia'
 import { createPersistedState } from 'pinia-plugin-persistedstate'
 import { abilitiesPlugin } from '@casl/vue'
@@ -17,11 +20,19 @@ import router from './router'
 import { setAuthHandlers } from './api/http'
 import { ability } from './plugins/ability'
 import { useAuthStore } from './stores/auth'
+import { useUiStore } from './stores/ui'
 
 const vuetify = createVuetify({
   components,
   directives,
   locale: { locale: 'es', messages: { es } },
+  // verde del logo, un poco más claro en modo oscuro para que tenga contraste
+  theme: {
+    themes: {
+      light: { colors: { primary: '#1b8f4c' } },
+      dark: { colors: { primary: '#34c471' } },
+    },
+  },
 })
 
 const pinia = createPinia()
@@ -35,6 +46,9 @@ pinia.use(
 const app = createApp(App)
 app.use(vuetify)
 app.use(pinia)
+
+// el tema elegido vive en Pinia, que no existía cuando se creó Vuetify
+vuetify.theme.change(useUiStore().theme)
 
 const auth = useAuthStore()
 // las reglas de CASL no se persisten, se reconstruyen desde el usuario guardado
