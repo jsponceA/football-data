@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import { createTestVuetify, flush } from '@/__tests__/helpers'
-import PhotoUpload from '../PhotoUpload.vue'
+import PhotoUpload from '@/components/PhotoUpload.vue'
 
 function mountPhoto(props: { url?: string | null } = {}) {
   const wrapper = mount(PhotoUpload, {

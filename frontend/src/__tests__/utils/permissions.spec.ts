@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { countryCode } from '../countries'
-import { describePermission, permissionActions } from '../permissions'
+import { countryCode } from '@/utils/countries'
+import { describePermission, permissionActions } from '@/utils/permissions'
 
 describe('describePermission', () => {
   it('separa sección y acción y las pone en español', () => {

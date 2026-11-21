@@ -3,7 +3,7 @@ import { withSetup } from '@/__tests__/helpers'
 import { palettes } from '@/plugins/palettes'
 import { useUiStore } from '@/stores/ui'
 import { useTheme } from 'vuetify'
-import { useAppearance } from '../useAppearance'
+import { useAppearance } from '@/composables/useAppearance'
 
 function setup() {
   return withSetup(() => ({ appearance: useAppearance(), theme: useTheme(), ui: useUiStore() })).result

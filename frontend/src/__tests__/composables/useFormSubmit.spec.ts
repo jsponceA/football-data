@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { SubmitEventPromise } from 'vuetify'
 import { ApiError } from '@/api/http'
-import { useFormSubmit } from '../useFormSubmit'
+import { useFormSubmit } from '@/composables/useFormSubmit'
 
 // el evento de Vuetify es una promesa que trae si el formulario pasó sus reglas
 const event = (valid: boolean) => Promise.resolve({ valid }) as unknown as SubmitEventPromise

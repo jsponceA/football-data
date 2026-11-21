@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import TurnstileWidget from '../TurnstileWidget.vue'
+import TurnstileWidget from '@/components/TurnstileWidget.vue'
 
 describe('TurnstileWidget', () => {
   it('sin clave del sitio no dibuja nada y no descarga el script de Cloudflare', () => {

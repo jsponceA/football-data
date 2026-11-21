@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as authApi from '@/api/auth'
 import { ability } from '@/plugins/ability'
 import type { SessionUser } from '@/types/api'
-import { useAuthStore } from '../auth'
+import { useAuthStore } from '@/stores/auth'
 
 vi.mock('@/api/auth', () => ({ login: vi.fn(), register: vi.fn(), logout: vi.fn(), me: vi.fn() }))
 

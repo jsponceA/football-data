@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import { createTestVuetify } from '@/__tests__/helpers'
-import DataState from '../DataState.vue'
+import DataState from '@/components/DataState.vue'
 
 const base = { loading: false, error: '', empty: false }
 

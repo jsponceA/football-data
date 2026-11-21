@@ -4,7 +4,7 @@ import { defineComponent } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { describe, expect, it, vi } from 'vitest'
 import { createTestVuetify } from '@/__tests__/helpers'
-import LoginView from '../LoginView.vue'
+import LoginView from '@/views/LoginView.vue'
 
 vi.mock('@/api/auth', () => ({ login: vi.fn(), logout: vi.fn(), me: vi.fn() }))
 

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { ApiError } from '@/api/http'
 import type { Paginated } from '@/types/api'
 import { flush, withSetup } from '@/__tests__/helpers'
-import { usePaginatedList } from '../usePaginatedList'
+import { usePaginatedList } from '@/composables/usePaginatedList'
 
 const answer = (names: string[], total = names.length) =>
   ({ data: names.map((name, id) => ({ id, name })), meta: { total, current_page: 1, last_page: 1 } }) as unknown as Paginated<{

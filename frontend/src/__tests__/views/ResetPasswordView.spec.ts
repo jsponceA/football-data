@@ -4,7 +4,7 @@ import { defineComponent } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { describe, expect, it, vi } from 'vitest'
 import { createTestVuetify } from '@/__tests__/helpers'
-import ResetPasswordView from '../ResetPasswordView.vue'
+import ResetPasswordView from '@/views/ResetPasswordView.vue'
 
 vi.mock('@/api/auth', () => ({ resetPassword: vi.fn() }))
 

@@ -11,7 +11,7 @@ import {
   positionLabel,
   timeAgo,
   typeLabel,
-} from '../format'
+} from '@/utils/format'
 
 afterEach(() => vi.useRealTimers())
 

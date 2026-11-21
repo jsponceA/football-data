@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref } from 'vue'
 import { VApp } from 'vuetify/components'
 import { createTestVuetify } from '@/__tests__/helpers'
-import PwaStatus from '../PwaStatus.vue'
+import PwaStatus from '@/components/PwaStatus.vue'
 
 // el módulo "virtual:pwa-register/vue" lo genera el plugin al compilar; aquí se simula
 const sw = vi.hoisted(() => ({
@@ -108,7 +108,7 @@ describe('PwaStatus: aviso de versión nueva', () => {
     vi.doMock('virtual:pwa-register/vue', () => ({
       useRegisterSW: () => ({ needRefresh, offlineReady: ref(false), updateServiceWorker }),
     }))
-    const { default: Componente } = await import('../PwaStatus.vue')
+    const { default: Componente } = await import('@/components/PwaStatus.vue')
 
     const montado = mount(
       defineComponent({ render: () => h(VApp, null, { default: () => h(Componente) }) }),

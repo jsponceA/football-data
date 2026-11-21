@@ -4,7 +4,7 @@ import { ApiError } from '@/api/http'
 // el captcha se prende solo con la clave del sitio; aquí se simula que está activo
 vi.mock('@/utils/turnstile', () => ({ turnstileEnabled: true, turnstileSiteKey: 'clave', loadTurnstile: vi.fn() }))
 
-const { useCaptcha } = await import('../useCaptcha')
+const { useCaptcha } = await import('@/composables/useCaptcha')
 
 describe('useCaptcha', () => {
   it('sin token no deja enviar y avisa que se espere a la verificación', () => {

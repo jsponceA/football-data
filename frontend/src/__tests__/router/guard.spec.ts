@@ -4,7 +4,7 @@ import * as authApi from '@/api/auth'
 import { ability } from '@/plugins/ability'
 import type { SessionUser } from '@/types/api'
 import { useAuthStore } from '@/stores/auth'
-import router, { expiredSessionLocation } from '../index'
+import router, { expiredSessionLocation } from '@/router'
 
 vi.mock('@/api/auth', () => ({ login: vi.fn(), logout: vi.fn(), me: vi.fn() }))
 

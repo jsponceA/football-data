@@ -1,6 +1,6 @@
 import { AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, http, setAuthHandlers } from '../http'
+import { ApiError, http, setAuthHandlers } from '@/api/http'
 
 type Sent = InternalAxiosRequestConfig | null
 let sent: Sent = null

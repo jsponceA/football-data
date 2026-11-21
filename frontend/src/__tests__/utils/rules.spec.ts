@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { emailFormat, minLength, required } from '../rules'
+import { emailFormat, minLength, required } from '@/utils/rules'
 
 describe('required', () => {
   it('rechaza vacíos, espacios, null y listas vacías', () => {
