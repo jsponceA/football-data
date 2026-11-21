@@ -12,7 +12,6 @@ class RolePermissionSeeder extends Seeder
     // formato recurso.acción
     public const PERMISSIONS = [
         'competitions.view',
-        'competitions.import',
         'teams.view',
         'players.view',
         'users.manage',
@@ -28,6 +27,9 @@ class RolePermissionSeeder extends Seeder
         foreach (self::PERMISSIONS as $name) {
             Permission::firstOrCreate(['name' => $name, 'guard_name' => $guard]);
         }
+
+        // quita los permisos que ya no existen en la lista (p. ej. el viejo competitions.import)
+        Permission::where('guard_name', $guard)->whereNotIn('name', self::PERMISSIONS)->delete();
 
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => $guard])
             ->syncPermissions(self::PERMISSIONS);
