@@ -3,9 +3,10 @@
 # PHP 8.5 con FPM: Nginx (contenedor "web") le habla por FastCGI en el puerto 9000
 FROM php:8.5-fpm-alpine
 
-# PostgreSQL y opcache; el resto de extensiones que pide Laravel ya vienen en la imagen
+# PostgreSQL; el resto de extensiones que pide Laravel ya vienen en la imagen.
+# Desde PHP 8.5 opcache va integrado en PHP: ya no se instala como extensión aparte
 RUN apk add --no-cache libpq postgresql-dev \
-    && docker-php-ext-install pdo_pgsql opcache \
+    && docker-php-ext-install pdo_pgsql \
     && apk del postgresql-dev
 
 # ajustes de PHP: la foto de perfil admite hasta 2 MB (esto deja margen) y, como la imagen no
