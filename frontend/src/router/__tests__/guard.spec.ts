@@ -72,6 +72,17 @@ describe('sin sesión', () => {
 
     expect(router.currentRoute.value.name).toBe('login')
   })
+
+  it.each(['/register', '/forgot-password', '/reset-password?token=abc&email=a%40b.com'])(
+    '%s es accesible sin sesión',
+    async (path) => {
+      sessionAs(null)
+
+      await router.push(path)
+
+      expect(router.currentRoute.value.fullPath).toBe(path)
+    },
+  )
 })
 
 describe('con sesión', () => {
@@ -81,6 +92,23 @@ describe('con sesión', () => {
     await router.push('/login')
 
     expect(router.currentRoute.value.name).toBe('competitions')
+  })
+
+  it.each(['/register', '/forgot-password'])('quien ya entró no ve %s', async (path) => {
+    sessionAs(admin)
+
+    await router.push(path)
+
+    expect(router.currentRoute.value.name).toBe('competitions')
+  })
+
+  it('el enlace del correo abre el restablecimiento aunque ya haya sesión', async () => {
+    sessionAs(admin)
+
+    await router.push('/reset-password?token=abc&email=a%40b.com')
+
+    expect(router.currentRoute.value.name).toBe('reset-password')
+    expect(router.currentRoute.value.query.token).toBe('abc')
   })
 
   it('la raíz lleva a la primera sección que el usuario puede ver', async () => {

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Notifications\ResetPasswordNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -20,6 +21,11 @@ class User extends Authenticatable implements OAuthenticatable
     protected $fillable = ['name', 'email', 'password', 'is_active', 'photo_path'];
 
     protected $hidden = ['password', 'remember_token'];
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
 
     // el recurso de la API no expone la ruta interna, solo la URL pública
     public function getPhotoUrlAttribute(): ?string

@@ -2,11 +2,10 @@
 import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { SubmitEventPromise } from 'vuetify'
-import ThemeToggle from '@/components/ThemeToggle.vue'
+import AuthShell from '@/components/AuthShell.vue'
 import { useFormSubmit } from '@/composables/useFormSubmit'
 import { useAuthStore } from '@/stores/auth'
 import { emailFormat, required } from '@/utils/rules'
-import logo from '@/assets/img/logo.webp'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -27,74 +26,60 @@ function submit(event: SubmitEventPromise) {
 </script>
 
 <template>
-  <v-main class="login">
-    <section class="login-hero">
-      <div>
-        <img :src="logo" alt="" class="login-hero__logo" />
-        <h1 class="login-hero__title">Football Data</h1>
-        <p class="login-hero__text">
-          Consulta las ligas, los equipos y los jugadores de las principales competiciones.
-        </p>
+  <AuthShell title="Bienvenido" subtitle="Ingresa con tu cuenta para continuar.">
+    <v-alert v-if="error" type="error" variant="tonal" class="mb-6" density="comfortable">
+      {{ error }}
+    </v-alert>
+
+    <v-form validate-on="submit lazy" @submit.prevent="submit">
+      <v-text-field
+        v-model="form.email"
+        label="Correo"
+        type="email"
+        variant="outlined"
+        rounded="lg"
+        autocomplete="username"
+        prepend-inner-icon="mdi-email-outline"
+        :rules="[required, emailFormat]"
+        :error-messages="fieldErrors.email"
+      />
+      <v-text-field
+        v-model="form.password"
+        label="Contraseña"
+        variant="outlined"
+        rounded="lg"
+        autocomplete="current-password"
+        prepend-inner-icon="mdi-lock-outline"
+        :type="showPassword ? 'text' : 'password'"
+        :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+        :rules="[required]"
+        :error-messages="fieldErrors.password"
+        @click:append-inner="showPassword = !showPassword"
+      />
+
+      <div class="text-right mb-4">
+        <router-link :to="{ name: 'forgot-password' }" class="text-body-2 text-primary">
+          ¿Olvidaste tu contraseña?
+        </router-link>
       </div>
-    </section>
 
-    <section class="login-panel">
-      <div class="login-theme">
-        <ThemeToggle />
-      </div>
+      <v-btn
+        type="submit"
+        color="primary"
+        block
+        size="x-large"
+        rounded="lg"
+        class="text-none font-weight-bold"
+        append-icon="mdi-arrow-right"
+        :loading="loading"
+      >
+        Iniciar sesión
+      </v-btn>
+    </v-form>
 
-      <div class="login-form">
-        <v-card class="pa-8" rounded="xl" border flat>
-          <div class="login-form__logo">
-            <img :src="logo" alt="Football Data" width="104" height="104" />
-          </div>
-          <h2 class="text-h4 font-weight-bold mb-1">Bienvenido</h2>
-          <p class="text-body-1 text-medium-emphasis mb-8">Ingresa con tu cuenta para continuar.</p>
-
-          <v-alert v-if="error" type="error" variant="tonal" class="mb-6" density="comfortable">
-            {{ error }}
-          </v-alert>
-
-          <v-form validate-on="submit lazy" @submit.prevent="submit">
-            <v-text-field
-              v-model="form.email"
-              label="Correo"
-              type="email"
-              variant="outlined"
-              rounded="lg"
-              autocomplete="username"
-              prepend-inner-icon="mdi-email-outline"
-              :rules="[required, emailFormat]"
-              :error-messages="fieldErrors.email"
-            />
-            <v-text-field
-              v-model="form.password"
-              label="Contraseña"
-              variant="outlined"
-              rounded="lg"
-              autocomplete="current-password"
-              prepend-inner-icon="mdi-lock-outline"
-              :type="showPassword ? 'text' : 'password'"
-              :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-              :rules="[required]"
-              :error-messages="fieldErrors.password"
-              @click:append-inner="showPassword = !showPassword"
-            />
-            <v-btn
-              type="submit"
-              color="primary"
-              block
-              size="x-large"
-              rounded="lg"
-              class="text-none font-weight-bold mt-2"
-              append-icon="mdi-arrow-right"
-              :loading="loading"
-            >
-              Iniciar sesión
-            </v-btn>
-          </v-form>
-        </v-card>
-      </div>
-    </section>
-  </v-main>
+    <p class="text-body-2 text-center text-medium-emphasis mt-6">
+      ¿No tienes cuenta?
+      <router-link :to="{ name: 'register' }" class="text-primary font-weight-medium">Regístrate</router-link>
+    </p>
+  </AuthShell>
 </template>

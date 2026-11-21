@@ -5,7 +5,7 @@ import { ability } from '@/plugins/ability'
 import type { SessionUser } from '@/types/api'
 import { useAuthStore } from '../auth'
 
-vi.mock('@/api/auth', () => ({ login: vi.fn(), logout: vi.fn(), me: vi.fn() }))
+vi.mock('@/api/auth', () => ({ login: vi.fn(), register: vi.fn(), logout: vi.fn(), me: vi.fn() }))
 
 const consulta: SessionUser = {
   id: 2,
@@ -33,6 +33,7 @@ beforeEach(() => {
   setActivePinia(createPinia())
   ability.update([])
   vi.mocked(authApi.login).mockReset()
+  vi.mocked(authApi.register).mockReset()
   vi.mocked(authApi.logout).mockReset()
   vi.mocked(authApi.me).mockReset()
 })
@@ -65,6 +66,35 @@ describe('sesión', () => {
     const auth = useAuthStore()
 
     await expect(auth.login('x@example.com', 'mala')).rejects.toThrow()
+
+    expect(auth.isLoggedIn).toBe(false)
+    expect(auth.user).toBeNull()
+  })
+
+  it('al registrarse deja la sesión abierta con los permisos del rol por defecto', async () => {
+    vi.mocked(authApi.register).mockResolvedValue({ token: 'nuevo', user: consulta })
+    const auth = useAuthStore()
+
+    await auth.register('Usuario de consulta', 'consulta@example.com', 'password', 'password')
+
+    expect(authApi.register).toHaveBeenCalledWith({
+      name: 'Usuario de consulta',
+      email: 'consulta@example.com',
+      password: 'password',
+      password_confirmation: 'password',
+    })
+    expect(auth.isLoggedIn).toBe(true)
+    expect(auth.token).toBe('nuevo')
+    expect(auth.refreshed).toBe(true)
+    expect(ability.can('view', 'teams')).toBe(true)
+    expect(ability.can('manage', 'users')).toBe(false)
+  })
+
+  it('si el registro falla no queda sesión', async () => {
+    vi.mocked(authApi.register).mockRejectedValue(new Error('correo repetido'))
+    const auth = useAuthStore()
+
+    await expect(auth.register('Ana', 'ana@example.com', 'password', 'password')).rejects.toThrow()
 
     expect(auth.isLoggedIn).toBe(false)
     expect(auth.user).toBeNull()

@@ -7,8 +7,10 @@ import { sections } from './navigation'
 
 declare module 'vue-router' {
   interface RouteMeta {
-    // solo para visitantes (login)
+    // solo para visitantes (login, registro, pedir el enlace de contraseña)
     guest?: boolean
+    // se ve con o sin sesión: el enlace del correo debe abrir aunque la persona ya haya entrado
+    public?: boolean
     title?: string
     // ruta del menú que debe verse activa cuando esta página es un detalle de esa sección
     section?: string
@@ -24,6 +26,24 @@ const router = createRouter({
       name: 'login',
       component: () => import('@/views/LoginView.vue'),
       meta: { guest: true, title: 'Iniciar sesión' },
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: () => import('@/views/RegisterView.vue'),
+      meta: { guest: true, title: 'Crear cuenta' },
+    },
+    {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: () => import('@/views/ForgotPasswordView.vue'),
+      meta: { guest: true, title: 'Recuperar contraseña' },
+    },
+    {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: () => import('@/views/ResetPasswordView.vue'),
+      meta: { public: true, title: 'Nueva contraseña' },
     },
     {
       path: '/',
@@ -131,6 +151,10 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
+
+  if (to.meta.public) {
+    return true
+  }
 
   if (to.meta.guest) {
     return auth.isLoggedIn ? { name: 'home' } : true

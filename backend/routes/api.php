@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompetitionController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
@@ -12,6 +13,11 @@ use Illuminate\Support\Facades\Route;
 
 // 10 intentos por minuto contra la fuerza bruta
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+
+// públicas, así que con tope de intentos para que no se usen para crear cuentas ni enviar correos sin fin
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:5,1');
+Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:10,1');
 
 Route::middleware(['auth:api', 'active'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

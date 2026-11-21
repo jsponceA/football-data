@@ -10,6 +10,28 @@ export async function login(email: string, password: string) {
   return data
 }
 
+// responde igual que el login: la persona queda con la sesión abierta
+export async function register(payload: { name: string; email: string; password: string; password_confirmation: string }) {
+  const { data } = await http.post<{ token: string; user: SessionUser }>('/register', payload)
+  return data
+}
+
+// devuelve el texto que el backend quiere mostrar; es el mismo exista o no el correo
+export async function forgotPassword(email: string) {
+  const { data } = await http.post<{ message: string }>('/forgot-password', { email })
+  return data.message
+}
+
+export async function resetPassword(payload: {
+  token: string
+  email: string
+  password: string
+  password_confirmation: string
+}) {
+  const { data } = await http.post<{ message: string }>('/reset-password', payload)
+  return data.message
+}
+
 export function logout() {
   return http.post('/logout')
 }

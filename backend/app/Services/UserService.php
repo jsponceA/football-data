@@ -12,6 +12,8 @@ use Illuminate\Validation\ValidationException;
 
 class UserService
 {
+    public const SELF_REGISTER_ROLE = 'solo-consulta';
+
     public function paginate(array $filters, int $perPage): LengthAwarePaginator
     {
         return User::query()
@@ -37,6 +39,23 @@ class UserService
             ]);
 
             $user->syncRoles($data['roles']);
+
+            return $user->load('roles');
+        });
+    }
+
+    // quien se registra solo entra como consulta; un administrador puede darle más permisos después
+    public function register(array $data): User
+    {
+        return DB::transaction(function () use ($data) {
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => $data['password'],
+                'is_active' => true,
+            ]);
+
+            $user->assignRole(self::SELF_REGISTER_ROLE);
 
             return $user->load('roles');
         });

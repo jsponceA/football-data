@@ -19,11 +19,19 @@ export const useAuthStore = defineStore(
       ability.update(value?.abilities ?? [])
     }
 
-    async function login(email: string, password: string) {
-      const data = await authApi.login(email, password)
+    function startSession(data: { token: string; user: SessionUser }) {
       token.value = data.token
       refreshed.value = true
       applyUser(data.user)
+    }
+
+    async function login(email: string, password: string) {
+      startSession(await authApi.login(email, password))
+    }
+
+    // el registro deja la sesión abierta, igual que el login
+    async function register(name: string, email: string, password: string, confirmation: string) {
+      startSession(await authApi.register({ name, email, password, password_confirmation: confirmation }))
     }
 
     async function refresh() {
@@ -56,7 +64,7 @@ export const useAuthStore = defineStore(
       applyUser(null)
     }
 
-    return { token, user, refreshed, isLoggedIn, login, refresh, setUser, logout, clear }
+    return { token, user, refreshed, isLoggedIn, login, register, refresh, setUser, logout, clear }
   },
   {
     persist: { pick: ['token', 'user'] },
