@@ -8,6 +8,7 @@ use App\Models\Player;
 use App\Models\Team;
 use App\Services\FootballData\ApiRateLimiter;
 use App\Services\FootballData\FootballDataClient;
+use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
@@ -55,6 +56,9 @@ class CompetitionService
 
         if ($competition) {
             $this->ensureFreePlan($competition);
+        } elseif ($this->listIsFresh()) {
+            // la lista es reciente y no está: no existe, no gasto una llamada para comprobarlo
+            throw new ApiException(404, 'La liga no existe en el servicio externo.');
         }
 
         // si no tengo la liga hay que pedir también la lista, para saber su plan
@@ -104,6 +108,13 @@ class CompetitionService
     {
         return $date !== null
             && $date->greaterThan(now()->subHours(config('services.football_data.fresh_hours')));
+    }
+
+    private function listIsFresh(): bool
+    {
+        $synced = Competition::max('synced_at');
+
+        return $synced !== null && $this->isFresh(Carbon::parse($synced));
     }
 
     private function withSquads(Competition $competition): Competition

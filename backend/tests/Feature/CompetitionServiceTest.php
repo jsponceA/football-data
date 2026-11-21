@@ -168,6 +168,15 @@ class CompetitionServiceTest extends TestCase
         $this->assertSame(404, $this->falla(fn () => $this->servicio()->import(99999))->getStatusCode());
     }
 
+    public function test_con_la_lista_fresca_una_liga_desconocida_da_404_sin_llamar(): void
+    {
+        Http::fake();
+        $this->ligaImportada(horas: 1);
+
+        $this->assertSame(404, $this->falla(fn () => $this->servicio()->import(99999))->getStatusCode());
+        Http::assertNothingSent();
+    }
+
     public function test_sin_cupo_y_con_copia_local_devuelve_la_copia_marcada_como_vieja(): void
     {
         Http::fake();
