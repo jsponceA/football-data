@@ -44,13 +44,13 @@ async function logout() {
 
 <template>
   <v-navigation-drawer v-model="drawer" :rail="isRail">
-    <v-list-item title="Football Data" class="py-3">
-      <template #prepend>
-        <v-avatar color="primary" size="40" class="mr-3">
-          <img :src="logo" alt="" width="34" height="34" />
-        </v-avatar>
-      </template>
-    </v-list-item>
+    <!-- no uso v-list-item: reserva un hueco fijo junto al icono y no deja centrar el logo en el modo compacto -->
+    <div class="d-flex align-center py-3" :class="isRail ? 'justify-center' : 'px-4'">
+      <v-avatar color="primary" size="40">
+        <img :src="logo" alt="" width="34" height="34" />
+      </v-avatar>
+      <span v-if="!isRail" class="text-subtitle-1 font-weight-medium ml-3">Football Data</span>
+    </div>
     <v-divider />
     <v-list nav density="comfortable">
       <v-list-item
@@ -108,19 +108,13 @@ async function logout() {
 
   <!-- el footer va dentro del main y no fijo: baja con el contenido y se pega al final si hay poco -->
   <v-main class="d-flex flex-column">
-    <v-container class="py-6 flex-grow-1" style="max-width: 1200px">
+    <v-container fluid class="py-4 px-4 px-md-6 flex-grow-1">
       <router-view />
     </v-container>
 
     <v-footer border height="44" class="flex-grow-0 flex-shrink-0 text-caption text-medium-emphasis">
-      <div class="d-flex flex-wrap justify-space-between align-center ga-2 w-100 px-2">
-        <span>© {{ year }} Football Data</span>
-        <span>
-          Datos de
-          <a href="https://www.football-data.org" target="_blank" rel="noopener" class="text-primary">
-            football-data.org
-          </a>
-        </span>
+      <div class="d-flex justify-end w-100 px-2">
+        © {{ year }} Football Data. Todos los derechos reservados.
       </div>
     </v-footer>
   </v-main>

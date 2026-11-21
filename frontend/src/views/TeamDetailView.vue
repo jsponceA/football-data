@@ -14,9 +14,7 @@ usePageTitle(() => team.value?.name)
 </script>
 
 <template>
-  <v-btn :to="{ name: 'teams' }" variant="text" prepend-icon="mdi-arrow-left" class="mb-2">
-    Equipos
-  </v-btn>
+  <PageHeader :crumbs="[{ title: 'Equipos', to: { name: 'teams' } }, { title: team?.name ?? 'Equipo' }]" />
 
   <DataState
     :loading="loading"
@@ -31,10 +29,12 @@ usePageTitle(() => team.value?.name)
           <v-img v-if="team.crest" :src="team.crest" :alt="team.name" contain />
           <v-icon v-else icon="mdi-shield-half-full" size="48" />
         </v-avatar>
-        <PageHeader
-          :title="team.name"
-          :subtitle="[team.venue, team.founded ? `Fundado en ${team.founded}` : null].filter(Boolean).join(' · ')"
-        />
+        <div>
+          <h1 class="text-h5">{{ team.name }}</h1>
+          <p class="text-body-2 text-medium-emphasis">
+            {{ [team.venue, team.founded ? `Fundado en ${team.founded}` : null].filter(Boolean).join(' · ') }}
+          </p>
+        </div>
       </div>
 
       <div v-if="team.competitions?.length" class="mb-4 d-flex flex-wrap ga-2">
@@ -45,9 +45,9 @@ usePageTitle(() => team.value?.name)
 
       <h2 class="text-h6 mb-3">Plantilla ({{ team.players?.length ?? 0 }})</h2>
 
-      <v-card v-if="team.players?.length">
+      <v-card v-if="team.players?.length" border flat>
         <div style="overflow-x: auto">
-          <v-table density="comfortable">
+          <v-table class="crud-table" density="comfortable">
             <thead>
               <tr>
                 <th>Nombre</th>

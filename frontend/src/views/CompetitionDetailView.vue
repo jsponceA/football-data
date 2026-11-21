@@ -19,9 +19,9 @@ const teams = computed(() => competition.value?.teams ?? [])
 </script>
 
 <template>
-  <v-btn :to="{ name: 'competitions' }" variant="text" prepend-icon="mdi-arrow-left" class="mb-2">
-    Ligas
-  </v-btn>
+  <PageHeader
+    :crumbs="[{ title: 'Ligas', to: { name: 'competitions' } }, { title: competition?.name ?? 'Liga' }]"
+  />
 
   <DataState
     :loading="loading"
@@ -35,15 +35,24 @@ const teams = computed(() => competition.value?.teams ?? [])
         El servicio externo no está disponible ahora, se muestran los últimos datos guardados.
       </v-alert>
 
-      <PageHeader :title="competition.name" :subtitle="competition.area ?? undefined">
+      <div class="d-flex flex-wrap align-center ga-4 mb-6">
+        <v-avatar rounded="0" size="64">
+          <v-img v-if="competition.emblem" :src="competition.emblem" :alt="competition.name" contain />
+          <v-icon v-else icon="mdi-trophy" size="40" />
+        </v-avatar>
+        <div>
+          <h1 class="text-h5">{{ competition.name }}</h1>
+          <p class="text-body-2 text-medium-emphasis">{{ competition.area ?? '—' }}</p>
+        </div>
+        <v-spacer />
         <v-chip label>{{ competition.code }}</v-chip>
         <v-chip>Actualizada {{ formatDateTime(competition.imported_at) }}</v-chip>
-      </PageHeader>
+      </div>
 
       <h2 class="text-h6 mb-3">Equipos ({{ teams.length }})</h2>
 
       <v-row v-if="teams.length">
-        <v-col v-for="team in teams" :key="team.id" cols="12" sm="6" md="4" lg="3">
+        <v-col v-for="team in teams" :key="team.id" cols="12" sm="6" md="4" lg="3" xl="2">
           <v-card :to="{ name: 'team', params: { id: team.id } }" height="100%">
             <v-card-item>
               <template #prepend>

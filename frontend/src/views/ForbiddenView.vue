@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import EmptyState from '@/components/EmptyState.vue'
+import PageHeader from '@/components/PageHeader.vue'
 </script>
 
 <template>
+  <PageHeader :crumbs="[{ title: 'Sin acceso' }]" />
+
   <EmptyState
     icon="mdi-shield-lock-outline"
     title="No tienes acceso a esta sección"

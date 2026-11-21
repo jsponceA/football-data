@@ -4,6 +4,7 @@ import { deleteRole, getPermissions, getRoles } from '@/api/admin'
 import DataState from '@/components/DataState.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
+import PerPageSelect from '@/components/PerPageSelect.vue'
 import RoleFormDialog from '@/components/RoleFormDialog.vue'
 import { usePaginatedList } from '@/composables/usePaginatedList'
 import { useNotify } from '@/composables/useNotify'
@@ -11,7 +12,7 @@ import type { Permission, Role } from '@/types/api'
 import { errorMessage } from '@/utils/format'
 import { describePermission } from '@/utils/permissions'
 
-const { items, meta, page, loading, error, load } = usePaginatedList(getRoles)
+const { items, meta, page, perPage, loading, error, load } = usePaginatedList(getRoles)
 const { notify } = useNotify()
 
 const permissions = ref<Permission[]>([])
@@ -56,8 +57,10 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <PageHeader title="Roles y permisos" subtitle="Qué puede hacer cada grupo de usuarios">
-    <v-btn color="primary" prepend-icon="mdi-plus" @click="openForm(null)">Nuevo</v-btn>
+  <PageHeader :crumbs="[{ title: 'Roles y permisos' }]">
+    <v-btn color="primary" prepend-icon="mdi-shield-plus-outline" @click="openForm(null)">
+      Nuevo rol
+    </v-btn>
   </PageHeader>
 
   <DataState
@@ -68,49 +71,56 @@ async function confirmDelete() {
     empty-icon="mdi-shield-off-outline"
     @retry="load"
   >
-    <v-card>
+    <div class="mb-3">
+      <PerPageSelect v-model="perPage" />
+    </div>
+
+    <v-card border flat>
       <v-progress-linear :active="loading" indeterminate />
       <div style="overflow-x: auto">
-        <v-table>
+        <v-table class="crud-table">
           <thead>
             <tr>
+              <th>Acciones</th>
               <th>Rol</th>
               <th>Permisos</th>
               <th class="text-right">Usuarios</th>
-              <th></th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="role in items" :key="role.id">
               <td>
-                <v-icon v-if="role.protected" icon="mdi-lock" size="small" class="mr-1" title="Rol protegido" />
-                {{ role.name }}
+                <div class="row-actions">
+                  <v-btn
+                    v-if="!role.protected"
+                    icon="mdi-pencil-outline"
+                    size="x-small"
+                    variant="tonal"
+                    color="warning"
+                    rounded="lg"
+                    :aria-label="`Editar ${role.name}`"
+                    @click="openForm(role)"
+                  />
+                  <v-btn
+                    v-if="!role.protected"
+                    icon="mdi-delete-outline"
+                    size="x-small"
+                    variant="tonal"
+                    color="error"
+                    rounded="lg"
+                    :aria-label="`Eliminar ${role.name}`"
+                    @click="toDelete = role"
+                  />
+                  <v-icon v-else icon="mdi-lock-outline" size="small" title="Rol protegido" class="ml-2" />
+                </div>
               </td>
+              <td class="text-no-wrap">{{ role.name }}</td>
               <td class="py-2">
                 <v-chip v-for="name in role.permissions" :key="name" size="small" class="mr-1 mb-1">
                   {{ describePermission(name).subject }}: {{ describePermission(name).action }}
                 </v-chip>
               </td>
               <td class="text-right">{{ role.users_count ?? 0 }}</td>
-              <td class="text-right text-no-wrap">
-                <template v-if="!role.protected">
-                  <v-btn
-                    icon="mdi-pencil"
-                    variant="text"
-                    size="small"
-                    :aria-label="`Editar ${role.name}`"
-                    @click="openForm(role)"
-                  />
-                  <v-btn
-                    icon="mdi-delete"
-                    variant="text"
-                    size="small"
-                    color="error"
-                    :aria-label="`Eliminar ${role.name}`"
-                    @click="toDelete = role"
-                  />
-                </template>
-              </td>
             </tr>
           </tbody>
         </v-table>

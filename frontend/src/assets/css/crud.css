@@ -1,0 +1,65 @@
+/* breadcrumb: la página actual resalta con el color principal */
+.page-crumbs .v-breadcrumbs-item--disabled {
+  opacity: 1;
+  color: rgb(var(--v-theme-primary));
+  font-weight: 600;
+}
+
+/* filtros en una sola fila: campos de ancho acotado y botones al lado */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.filter-field {
+  flex: 1 1 180px;
+  max-width: 240px;
+}
+
+.filter-field--wide {
+  flex-basis: 240px;
+  max-width: 340px;
+}
+
+.filter-label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* los inputs de Vuetify no tienen prop size, el alto se ajusta con sus variables */
+.filter-field .v-input,
+.v-input.per-page {
+  --v-input-control-height: 36px;
+  --v-input-padding-top: 0px;
+  font-size: 0.875rem;
+}
+
+.filter-field .v-field,
+.v-input.per-page .v-field {
+  --v-field-padding-top: 6px;
+  --v-field-padding-bottom: 6px;
+}
+
+@media (max-width: 599px) {
+  .filter-field,
+  .filter-field--wide {
+    flex-basis: 100%;
+    max-width: none;
+  }
+}
+
+/* tablas de los listados: cabecera sombreada y texto sin cortar */
+.crud-table.v-table thead th {
+  background: rgb(var(--v-theme-surface-light));
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+}
