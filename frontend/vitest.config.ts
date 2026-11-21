@@ -10,6 +10,10 @@ export default mergeConfig(
       environment: 'jsdom',
       exclude: [...configDefaults.exclude, 'e2e/**'],
       root: fileURLToPath(new URL('./', import.meta.url)),
+      // jsdom no trae lo que Vuetify espera del navegador (ResizeObserver, matchMedia...)
+      setupFiles: ['./src/__tests__/setup.ts'],
+      // Vuetify importa archivos .css; hay que pasarlos por Vite en vez de dejar que Node los lea
+      server: { deps: { inline: ['vuetify'] } },
     },
     plugins: [
       ViteFonts({
