@@ -6,7 +6,9 @@ use App\Models\User;
 use Database\Seeders\PassportClientSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\Concerns\ActsAsUsers;
 use Tests\TestCase;
@@ -145,6 +147,168 @@ class AccessControlTest extends TestCase
         ]))->assertUnprocessable()->assertJsonValidationErrors(['roles']);
 
         $this->assertTrue($admin->fresh()->hasRole('admin'));
+    }
+
+    public function test_desactivar_desde_el_listado_cierra_sesiones_y_se_puede_reactivar(): void
+    {
+        $user = User::factory()->create(['email' => 'victima@example.com', 'password' => 'clave-segura-1']);
+        $user->assignRole('solo-consulta');
+        $this->postJson('/api/login', ['email' => 'victima@example.com', 'password' => 'clave-segura-1'])->assertOk();
+
+        $this->entrarComo('admin');
+
+        $this->patchJson("/api/users/{$user->id}/status", ['is_active' => false])
+            ->assertOk()->assertJsonPath('data.is_active', false);
+        $this->assertSame(0, $user->tokens()->where('revoked', false)->count());
+
+        $this->patchJson("/api/users/{$user->id}/status", ['is_active' => true])
+            ->assertOk()->assertJsonPath('data.is_active', true);
+        $this->assertTrue($user->fresh()->is_active);
+    }
+
+    public function test_el_estado_no_deja_desactivarse_a_uno_mismo_ni_acepta_basura(): void
+    {
+        $admin = $this->entrarComo('admin');
+
+        $this->patchJson("/api/users/{$admin->id}/status", ['is_active' => false])
+            ->assertUnprocessable()->assertJsonValidationErrors(['is_active']);
+        $this->patchJson("/api/users/{$admin->id}/status", [])
+            ->assertUnprocessable()->assertJsonValidationErrors(['is_active']);
+
+        $this->assertTrue($admin->fresh()->is_active);
+        $this->patchJson('/api/users/99999/status', ['is_active' => false])->assertNotFound();
+    }
+
+    public function test_sin_permiso_de_usuarios_no_se_cambia_el_estado(): void
+    {
+        $user = User::factory()->create();
+        $this->entrarComo('solo-consulta');
+
+        $this->patchJson("/api/users/{$user->id}/status", ['is_active' => false])->assertForbidden();
+    }
+
+    public function test_subir_y_cambiar_la_foto_guarda_el_archivo_y_borra_el_anterior(): void
+    {
+        Storage::fake('public');
+        $this->entrarComo('admin');
+        $user = User::factory()->create()->assignRole('solo-consulta');
+
+        $this->postJson("/api/users/{$user->id}/photo", ['photo' => UploadedFile::fake()->image('uno.jpg')])
+            ->assertOk()
+            ->assertJsonPath('data.photo_url', Storage::disk('public')->url($user->fresh()->photo_path));
+
+        $primera = $user->fresh()->photo_path;
+        Storage::disk('public')->assertExists($primera);
+
+        $this->postJson("/api/users/{$user->id}/photo", ['photo' => UploadedFile::fake()->image('dos.png')])->assertOk();
+
+        Storage::disk('public')->assertMissing($primera);
+        Storage::disk('public')->assertExists($user->fresh()->photo_path);
+    }
+
+    public function test_los_roles_se_filtran_por_nombre_permiso_y_uso(): void
+    {
+        $this->entrarComo('admin');
+        Role::create(['name' => 'analista', 'guard_name' => 'api'])->givePermissionTo('teams.view');
+        // admin lo usa el usuario que entró, solo-consulta nadie, analista nadie
+
+        $this->getJson('/api/roles')->assertJsonPath('meta.total', 3);
+
+        $this->getJson('/api/roles?search=anal')->assertJsonCount(1, 'data')->assertJsonPath('data.0.name', 'analista');
+
+        // admin tiene todos los permisos; users.manage es solo suyo
+        $this->getJson('/api/roles?permission=teams.view')->assertJsonPath('meta.total', 3);
+        $this->getJson('/api/roles?permission=users.manage')->assertJsonCount(1, 'data')->assertJsonPath('data.0.name', 'admin');
+
+        $this->getJson('/api/roles?users=with')->assertJsonCount(1, 'data')->assertJsonPath('data.0.name', 'admin');
+        $this->getJson('/api/roles?users=without')->assertJsonPath('meta.total', 2);
+
+        // se pueden combinar
+        $this->getJson('/api/roles?permission=teams.view&users=without&search=anal')->assertJsonCount(1, 'data');
+
+        $this->getJson('/api/roles?users=quizas')->assertUnprocessable()->assertJsonValidationErrors(['users']);
+    }
+
+    public function test_la_foto_se_puede_quitar(): void
+    {
+        Storage::fake('public');
+        $this->entrarComo('admin');
+        $user = User::factory()->create()->assignRole('solo-consulta');
+
+        $this->postJson("/api/users/{$user->id}/photo", ['photo' => UploadedFile::fake()->image('uno.jpg')])->assertOk();
+        $path = $user->fresh()->photo_path;
+
+        $this->deleteJson("/api/users/{$user->id}/photo")->assertOk()->assertJsonPath('data.photo_url', null);
+
+        Storage::disk('public')->assertMissing($path);
+        $this->assertNull($user->fresh()->photo_path);
+    }
+
+    public function test_la_foto_debe_ser_una_imagen_de_hasta_2_mb(): void
+    {
+        Storage::fake('public');
+        $this->entrarComo('admin');
+        $user = User::factory()->create()->assignRole('solo-consulta');
+
+        $this->postJson("/api/users/{$user->id}/photo", [])->assertUnprocessable()->assertJsonValidationErrors(['photo']);
+
+        $this->postJson("/api/users/{$user->id}/photo", ['photo' => UploadedFile::fake()->create('nota.pdf', 10, 'application/pdf')])
+            ->assertUnprocessable()->assertJsonValidationErrors(['photo']);
+
+        $this->postJson("/api/users/{$user->id}/photo", ['photo' => UploadedFile::fake()->image('grande.jpg')->size(3000)])
+            ->assertUnprocessable()->assertJsonValidationErrors(['photo']);
+
+        $this->assertNull($user->fresh()->photo_path);
+    }
+
+    public function test_sin_permiso_de_usuarios_no_se_toca_la_foto(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        $this->entrarComo('solo-consulta');
+
+        $this->postJson("/api/users/{$user->id}/photo", ['photo' => UploadedFile::fake()->image('uno.jpg')])->assertForbidden();
+        $this->deleteJson("/api/users/{$user->id}/photo")->assertForbidden();
+    }
+
+    public function test_ver_un_usuario_trae_sus_datos_y_roles_sin_la_contrasena(): void
+    {
+        $this->entrarComo('admin');
+        $user = User::factory()->create(['name' => 'Carlos Ruiz', 'email' => 'carlos@example.com'])->assignRole('solo-consulta');
+
+        $this->getJson("/api/users/{$user->id}")
+            ->assertOk()
+            ->assertJsonPath('data.id', $user->id)
+            ->assertJsonPath('data.email', 'carlos@example.com')
+            ->assertJsonPath('data.roles.0', 'solo-consulta')
+            ->assertJsonPath('data.photo_url', null)
+            ->assertJsonMissingPath('data.password');
+    }
+
+    public function test_ver_un_rol_trae_sus_permisos_y_cuantos_usuarios_lo_tienen(): void
+    {
+        $this->entrarComo('admin');
+        $role = Role::findByName('solo-consulta', 'api');
+        User::factory()->create()->assignRole('solo-consulta');
+
+        $this->getJson("/api/roles/{$role->id}")
+            ->assertOk()
+            ->assertJsonPath('data.name', 'solo-consulta')
+            ->assertJsonPath('data.protected', false)
+            ->assertJsonPath('data.users_count', 1)
+            ->assertJsonFragment(['teams.view']);
+
+        $this->getJson('/api/roles/99999')->assertNotFound();
+    }
+
+    public function test_el_detalle_de_usuarios_y_roles_pide_permiso(): void
+    {
+        $user = User::factory()->create();
+        $role = Role::findByName('solo-consulta', 'api');
+        $this->entrarComo('solo-consulta');
+
+        $this->getJson("/api/users/{$user->id}")->assertForbidden();
+        $this->getJson("/api/roles/{$role->id}")->assertForbidden();
     }
 
     public function test_usuario_inexistente_da_404(): void

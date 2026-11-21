@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\UserIndexRequest;
+use App\Http\Requests\UserPhotoRequest;
+use App\Http\Requests\UserStatusRequest;
 use App\Http\Resources\ManagedUserResource;
 use App\Models\User;
 use App\Services\UserService;
@@ -42,5 +44,23 @@ class UserController extends Controller
         return ManagedUserResource::make(
             $this->users->update($user, $request->validated(), $request->user()),
         );
+    }
+
+    public function updateStatus(UserStatusRequest $request, User $user): ManagedUserResource
+    {
+        return ManagedUserResource::make(
+            $this->users->setActive($user, $request->boolean('is_active'), $request->user()),
+        );
+    }
+
+    // aparte del PUT: el JSON de la edición no puede llevar archivos
+    public function updatePhoto(UserPhotoRequest $request, User $user): ManagedUserResource
+    {
+        return ManagedUserResource::make($this->users->replacePhoto($user, $request->file('photo')));
+    }
+
+    public function destroyPhoto(User $user): ManagedUserResource
+    {
+        return ManagedUserResource::make($this->users->removePhoto($user));
     }
 }

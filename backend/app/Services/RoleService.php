@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Permission;
@@ -14,11 +15,18 @@ class RoleService
 
     private const GUARD = 'api';
 
-    public function paginate(int $perPage): LengthAwarePaginator
+    public function paginate(array $filters, int $perPage): LengthAwarePaginator
     {
         return Role::where('guard_name', self::GUARD)
             ->with('permissions')
             ->withCount('users')
+            ->when($filters['search'] ?? null, fn (Builder $q, string $search) => $q->whereLike('name', "%{$search}%"))
+            ->when($filters['permission'] ?? null, fn (Builder $q, string $permission) => $q->whereHas(
+                'permissions', fn (Builder $p) => $p->where('name', $permission),
+            ))
+            ->when($filters['users'] ?? null, fn (Builder $q, string $users) => $users === 'with'
+                ? $q->has('users')
+                : $q->doesntHave('users'))
             ->orderBy('name')
             ->paginate($perPage);
     }

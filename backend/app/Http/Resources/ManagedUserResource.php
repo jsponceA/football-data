@@ -16,6 +16,7 @@ class ManagedUserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'is_active' => $this->is_active,
+            'photo_url' => $this->photo_url,
             'roles' => $this->roles->pluck('name'),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

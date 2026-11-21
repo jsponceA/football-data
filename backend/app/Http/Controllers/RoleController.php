@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\PaginationRequest;
+use App\Http\Requests\RoleIndexRequest;
 use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
 use App\Http\Resources\RoleResource;
@@ -19,9 +19,9 @@ class RoleController extends Controller
     {
     }
 
-    public function index(PaginationRequest $request): AnonymousResourceCollection
+    public function index(RoleIndexRequest $request): AnonymousResourceCollection
     {
-        return RoleResource::collection($this->roles->paginate($this->perPage($request)));
+        return RoleResource::collection($this->roles->paginate($request->validated(), $this->perPage($request)));
     }
 
     public function store(StoreRoleRequest $request): JsonResponse

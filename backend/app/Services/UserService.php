@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class UserService
@@ -63,13 +65,72 @@ class UserService
             $user->save();
             $user->syncRoles($data['roles']);
 
-            // al desactivarlo se cierran todas sus sesiones
             if ($wasActive && ! $user->is_active) {
-                $user->tokens()->get()->each->revoke();
+                $this->revokeSessions($user);
             }
 
             return $user->load('roles');
         });
+    }
+
+    public function updateProfile(User $user, array $data): User
+    {
+        $user->fill(['name' => $data['name'], 'email' => $data['email']]);
+
+        if (! empty($data['password'])) {
+            $user->password = $data['password'];
+        }
+
+        $user->save();
+
+        return $user->load('roles');
+    }
+
+    // activar o desactivar desde el listado, sin tocar el resto de los datos
+    public function setActive(User $user, bool $active, User $actor): User
+    {
+        if (! $active && $user->is($actor)) {
+            throw ValidationException::withMessages(['is_active' => 'No puedes desactivar tu propio usuario.']);
+        }
+
+        $wasActive = $user->is_active;
+        $user->update(['is_active' => $active]);
+
+        if ($wasActive && ! $active) {
+            $this->revokeSessions($user);
+        }
+
+        return $user->load('roles');
+    }
+
+    // al desactivarlo se cierran todas sus sesiones
+    private function revokeSessions(User $user): void
+    {
+        $user->tokens()->get()->each->revoke();
+    }
+
+    public function replacePhoto(User $user, UploadedFile $file): User
+    {
+        $old = $user->photo_path;
+
+        $user->update(['photo_path' => $file->store('avatars', 'public')]);
+
+        // la foto anterior ya no sirve; así el disco no se llena de archivos huérfanos
+        if ($old) {
+            Storage::disk('public')->delete($old);
+        }
+
+        return $user->load('roles');
+    }
+
+    public function removePhoto(User $user): User
+    {
+        if ($user->photo_path) {
+            Storage::disk('public')->delete($user->photo_path);
+            $user->update(['photo_path' => null]);
+        }
+
+        return $user->load('roles');
     }
 
     private function ensureNotLockingOut(User $user, array $data): void

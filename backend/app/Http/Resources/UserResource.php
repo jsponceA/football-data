@@ -17,6 +17,7 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'is_active' => $this->is_active,
+            'photo_url' => $this->photo_url,
             'roles' => $this->getRoleNames(),
             'permissions' => $permissions,
             // formato CASL: "teams.view" -> view sobre teams
