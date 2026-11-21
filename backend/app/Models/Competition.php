@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable([
-    'external_id', 'code', 'name', 'type', 'emblem', 'plan', 'area_name', 'synced_at', 'imported_at',
-])]
 class Competition extends Model
 {
+    protected $fillable = [
+        'external_id', 'code', 'name', 'type', 'emblem', 'plan', 'area_name', 'synced_at', 'imported_at',
+    ];
+
     // las rutas usan el id de football-data (/competitions/2021), no el interno
     public function getRouteKeyName(): string
     {

@@ -10,6 +10,7 @@ class DatabaseSeeder extends Seeder
     {
         // primero los roles, porque los usuarios los necesitan
         $this->call([
+            PassportClientSeeder::class,
             RolePermissionSeeder::class,
             UserSeeder::class,
         ]);

@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable([
-    'external_id', 'team_id', 'name', 'position', 'shirt_number', 'date_of_birth', 'nationality',
-])]
 class Player extends Model
 {
+    protected $fillable = [
+        'external_id', 'team_id', 'name', 'position', 'shirt_number', 'date_of_birth', 'nationality',
+    ];
+
     public function getRouteKeyName(): string
     {
         return 'external_id';

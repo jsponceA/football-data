@@ -9,8 +9,7 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // usuarios de prueba, solo para desarrollo (van en el README)
-        // la contraseña se guarda con hash por el cast del modelo
+        // usuarios de prueba (van en el README); el cast del modelo guarda la contraseña con hash
         $admin = User::updateOrCreate(
             ['email' => 'admin@example.com'],
             ['name' => 'Administrador', 'password' => 'password', 'is_active' => true],
