@@ -11,9 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 ])]
 class Competition extends Model
 {
-    /**
-     * Las rutas usan el id de football-data (/competitions/2021) y no el id interno.
-     */
+    // las rutas usan el id de football-data (/competitions/2021), no el interno
     public function getRouteKeyName(): string
     {
         return 'external_id';

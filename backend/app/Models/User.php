@@ -20,9 +20,7 @@ class User extends Authenticatable implements OAuthenticatable
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
-    /**
-     * Guard de Passport: los roles y permisos de Spatie se crean y se consultan con este guard.
-     */
+    // mismo guard que Passport, así Spatie busca los roles ahí
     protected string $guard_name = 'api';
 
     /**

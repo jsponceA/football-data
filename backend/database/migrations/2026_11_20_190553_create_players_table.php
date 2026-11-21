@@ -11,15 +11,14 @@ return new class extends Migration
         Schema::create('players', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('external_id')->unique();
-            // PostgreSQL no crea índice en las claves foráneas; el índice acelera "jugadores de un equipo".
+            // postgres no indexa las foráneas solo, por eso el index
             $table->foreignId('team_id')->constrained()->cascadeOnDelete()->index();
             $table->string('name');
-            // Posición, fecha y nacionalidad pueden venir vacías en la API.
             $table->string('position', 50)->nullable();
-            // El plan gratuito no entrega el dorsal; queda null, pero la columna existe por si otro plan lo trae.
+            // el plan gratis no manda el dorsal, siempre queda null
             $table->unsignedSmallInteger('shirt_number')->nullable();
             $table->date('date_of_birth')->nullable();
-            // Texto libre: la API es inconsistente ("Congo DR" / "DR Congo"), no se normaliza.
+            // texto tal cual viene, la API no es consistente ("Congo DR" / "DR Congo")
             $table->string('nationality', 100)->nullable();
             $table->timestamps();
         });

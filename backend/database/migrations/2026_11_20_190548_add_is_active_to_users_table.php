@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Un usuario desactivado no puede iniciar sesión, pero se conserva su historial.
+            // para desactivar usuarios sin borrarlos
             $table->boolean('is_active')->default(true)->after('password');
         });
     }

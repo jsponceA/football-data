@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::create('teams', function (Blueprint $table) {
             $table->id();
-            // Un equipo se guarda una sola vez aunque juegue varias ligas (p. ej. Liga y Champions).
+            // un equipo se guarda una sola vez aunque juegue en varias ligas
             $table->unsignedInteger('external_id')->unique();
             $table->string('name');
-            // El resto de datos son opcionales: la API no siempre los trae.
+            // lo demás es opcional, la API no siempre lo manda
             $table->string('short_name')->nullable();
             $table->string('tla', 10)->nullable();
             $table->string('crest')->nullable();
