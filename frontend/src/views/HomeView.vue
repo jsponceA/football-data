@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import TheWelcome from '../components/TheWelcome.vue'
+import EmptyState from '@/components/EmptyState.vue'
 </script>
 
 <template>
-  <main>
-    <TheWelcome />
-  </main>
+  <!-- solo se llega aquí si el usuario no tiene permiso para ninguna sección -->
+  <EmptyState
+    icon="mdi-lock-outline"
+    title="Sin secciones disponibles"
+    text="Tu usuario no tiene permisos asignados todavía. Pídele a un administrador que te asigne un rol."
+  />
 </template>
