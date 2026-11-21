@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\CompetitionImported;
 use App\Exceptions\ApiException;
 use App\Models\Competition;
 use App\Models\Player;
@@ -13,10 +14,12 @@ use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class CompetitionService
 {
-    private const FREE_PLAN = 'TIER_ONE';
+    // el plan gratuito de football-data solo da acceso a las ligas de este nivel
+    public const FREE_PLAN = 'TIER_ONE';
 
     // errores donde, si hay copia local, mejor la devuelvo marcada como vieja
     private const RECOVERABLE = [
@@ -156,7 +159,7 @@ class CompetitionService
 
     private function store(Competition $competition, array $data): void
     {
-        DB::transaction(function () use ($competition, $data) {
+        [$teamCount, $playerCount] = DB::transaction(function () use ($competition, $data) {
             $teams = $data['teams'];
 
             Team::upsert(collect($teams)->map(fn (array $t) => [
@@ -203,6 +206,16 @@ class CompetitionService
             }
 
             $competition->update(['imported_at' => now()]);
+
+            return [count($teams), count($players)];
         });
+
+        // fuera de la transacción y sin romper la importación: lo guardado ya está confirmado,
+        // y que un listener falle no debe convertir una importación buena en un error para quien la pidió
+        try {
+            CompetitionImported::dispatch($competition, $teamCount, $playerCount);
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 }

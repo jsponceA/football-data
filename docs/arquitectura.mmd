@@ -11,6 +11,13 @@ flowchart TB
     SVC["Servicios<br/>importación y consulta"]
     LIM["Límite de salida<br/>máx. 9 peticiones por minuto"]
     CLI["FootballDataClient<br/>única clase que llama afuera"]
+    EVT["Evento CompetitionImported<br/>listener: deja el registro"]
+  end
+
+  subgraph BG["Segundo plano (mismo código de la API)"]
+    SCH["Programador<br/>football:refresh cada noche, 3:00"]
+    QUE[("Cola de trabajos<br/>tabla jobs")]
+    WRK["Worker<br/>Job ImportCompetition"]
   end
 
   DB[("PostgreSQL<br/>Eloquent")]
@@ -23,3 +30,8 @@ flowchart TB
   SVC -- "2. solo si el dato no es<br/>reciente (24 h)" --> LIM
   LIM --> CLI
   CLI -- "HTTPS · X-Auth-Token" --> EXT
+  SVC -. "al guardar una liga" .-> EVT
+  SCH -- "encola un trabajo por liga,<br/>escalonados" --> QUE
+  QUE --> WRK
+  WRK -- "mismo servicio y mismo límite<br/>que la API" --> SVC
+  QUE -.- DB

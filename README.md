@@ -8,7 +8,7 @@ hacer cada persona según su rol. Es la solución a la prueba técnica de Senior
 
 - **API:** Laravel 13 y PHP 8.5, autenticación con Passport, base de datos PostgreSQL.
 - **SPA:** Vue 3 con TypeScript, Vuetify, Pinia y CASL. Se puede instalar como aplicación (PWA).
-- **Todo junto:** un `compose.yml` levanta la base de datos, la API y la SPA con un solo comando.
+- **Todo junto:** un `compose.yml` levanta la base de datos, la API, la SPA y los procesos de segundo plano con un solo comando.
 
 Versiones principales:
 
@@ -44,7 +44,7 @@ backend/      API Laravel
 frontend/     SPA Vue
 docs/         Diagramas (imagen y archivo editable de Mermaid)
 docker/       Configuración de Nginx para los contenedores
-compose.yml   Levanta PostgreSQL, la API y la SPA
+compose.yml   Levanta PostgreSQL, la API, la SPA, el worker de la cola y el programador de tareas
 .env.example  Variables para Docker Compose
 ```
 
@@ -81,6 +81,8 @@ docker compose up --build
 
 La primera vez tarda unos minutos, porque descarga las imágenes e instala las dependencias. Está listo cuando en los
 registros aparece `ready to handle connections`. Para dejar la terminal libre, usa `docker compose up -d --build`.
+Levanta cinco contenedores: `db`, `app` (la API), `web` (Nginx con la SPA), `worker` (la cola) y `scheduler` (las tareas
+programadas).
 
 Al arrancar, el contenedor de la API crea las llaves de Passport, ejecuta las migraciones y carga los seeders sin que
 tengas que hacer nada más. Los seeders solo corren cuando la base de datos está vacía, así que reiniciar los
@@ -152,6 +154,16 @@ npm run dev
 
 Abre <http://localhost:5173>. El archivo `frontend/.env` ya apunta a la API en `http://localhost:8000/api`.
 
+**Cola y tareas programadas** (opcional), en dos terminales más desde `backend`:
+
+```bash
+php artisan queue:work
+php artisan schedule:work
+```
+
+Sin ellas la aplicación funciona igual; lo único que no ocurre es el refresco automático de las ligas (ver
+[Segundo plano](#segundo-plano-cola-y-tareas-programadas)).
+
 ## 2. Usuarios de prueba
 
 Los crean los seeders al preparar la base de datos.
@@ -207,9 +219,9 @@ npm run test:unit
 npm run type-check
 ```
 
-La API tiene 137 pruebas y la SPA 122. Las de la API cubren el login y los permisos de cada ruta por rol, la
+La API tiene 159 pruebas y la SPA 122. Las de la API cubren el login y los permisos de cada ruta por rol, la
 importación (que no duplique registros y qué responde cuando falta cupo o falla el servicio externo), el limitador, el
-cliente de football-data, la paginación, el registro y el restablecimiento de contraseña. Las de la SPA cubren las
+cliente de football-data, el trabajo de la cola, el comando programado y el evento de importación, la paginación, el registro y el restablecimiento de contraseña. Las de la SPA cubren las
 validaciones, el guardián de rutas, el cierre de sesión por token vencido y los componentes que más lógica tienen.
 
 En cada `push` y en cada pull request, GitHub Actions ejecuta las pruebas de la API, y las de la SPA junto con la
@@ -266,6 +278,8 @@ Los errores siempre salen en JSON con el mismo formato, `{ "message": "..." }`, 
 La SPA habla solo con la API de Laravel. La API valida el token con Passport, revisa el permiso de la ruta y deja el
 trabajo en servicios. Los servicios leen y guardan en PostgreSQL con Eloquent, y solo cuando un dato no es reciente
 pasan por el limitador antes de llamar a football-data. Esa llamada sale por una única clase, `FootballDataClient`.
+Aparte, un programador y un worker (con el mismo código de la API) refrescan las ligas por la noche pasando por el mismo
+servicio y el mismo límite.
 Archivo editable: [`docs/arquitectura.mmd`](docs/arquitectura.mmd).
 
 ### El límite de 10 peticiones por minuto
@@ -278,7 +292,7 @@ Así, aunque football-data esté caído o sin cupo, todo lo guardado se puede co
 
 **2. Importar una liga cuesta dos llamadas como máximo.** Comprobé con el token real que `GET /competitions/{id}/teams`
 ya trae cada equipo con su plantilla. Por eso importar una liga es: la lista de ligas (solo si está vieja o la liga
-no se conocía) y los equipos. Eso permite hacerlo en la misma petición, sin colas.
+no se conocía) y los equipos. Eso permite hacerlo en la misma petición, sin esperar a una cola.
 
 **3. Un limitador propio, antes de llamar.** La API cuenta sus llamadas salientes y se permite 9 por minuto, una menos
 que el tope, para tener margen. El contador vive en la caché, así que lo comparten todos los procesos. El cliente se
@@ -296,9 +310,30 @@ importación a medias. Si no hay cupo, no intenta nada y responde así.
 La SPA usa `meta.stale` para mostrar un aviso de que los datos pueden estar desactualizados, y el `Retry-After` para
 decirle a la persona cuántos segundos esperar.
 
-Elegí no usar una cola para la importación. Son dos llamadas, la persona está esperando el resultado y una cola
-agregaría un servicio más que operar y una pantalla de "importando...". Lo dejo como mejora en
-[lo pendiente](#11-lo-que-quedó-pendiente).
+La importación que pide una persona (`GET /competitions/{id}`) no pasa por una cola: son dos llamadas como máximo, la
+persona está esperando el resultado y una cola le agregaría una pantalla de "importando...". La cola se usa para lo que
+nadie está esperando, que es mantener los datos al día.
+
+### Segundo plano: cola y tareas programadas
+
+- **Refresco nocturno.** Cada noche a las 3:00 (hora de Lima, cuando casi nadie consulta y sobra cupo) el programador
+  ejecuta `php artisan football:refresh`. Ese comando no importa nada: encola un trabajo `ImportCompetition` por cada
+  liga gratuita ya importada cuyos datos tengan más de 24 horas, separados 15 segundos entre sí.
+- **El worker ejecuta los trabajos** (`php artisan queue:work`). Cada uno usa el mismo servicio que la API, así que pasa
+  por el mismo limitador y nunca se salta el tope de 9 peticiones por minuto.
+- **Sin cupo no falla, espera.** Si no hay cupo o football-data no responde, el trabajo se pospone (lo que indique el
+  limitador, o un minuto) y sigue intentando durante media hora. Las ligas de pago (403) y las inexistentes (404) se
+  descartan, porque reintentar no cambia nada. Una misma liga no se encola dos veces a la vez.
+- **Primera carga.** `php artisan football:refresh --all` encola también las ligas gratuitas que nunca se importaron,
+  trayendo antes la lista de ligas si hace falta. En una instalación nueva, las 12 se reparten solas en unos minutos.
+- **Evento.** Cuando una liga termina de guardarse, venga de una persona o de la cola, se dispara
+  `CompetitionImported` y un listener deja el registro (liga, equipos y jugadores). Es un solo evento con un solo
+  listener; está para poder añadir otras reacciones, como un aviso, sin tocar el servicio.
+
+La cola usa la base de datos (`QUEUE_CONNECTION=database`), así que no hace falta Redis. En Docker, el worker y el
+programador son servicios del `compose.yml`; sin Docker son las dos terminales de la sección de ejecución. Para probarlo
+sin esperar a las 3:00, ejecuta `php artisan football:refresh` (en Docker,
+`docker compose exec app php artisan football:refresh`) y mira los registros con `docker compose logs worker`.
 
 ### Flujo de importación
 
@@ -353,7 +388,8 @@ Comparé estas opciones:
 | --- | --- | --- |
 | Hexagonal o Clean Architecture | El dominio queda aislado de Laravel y de la fuente de datos | El dominio es casi solo "guardar lo que llega y servirlo". Habría muchas interfaces y clases que solo reenvían la llamada |
 | DDD | Útil cuando hay reglas de negocio ricas | Aquí no las hay: las reglas importantes son de acceso y de límite de peticiones |
-| CQRS y eventos | Separa lecturas y escrituras | Las lecturas salen de las mismas tablas que escriben y no hay nadie más que reaccione a un evento |
+| CQRS | Separa lecturas y escrituras | Las lecturas salen de las mismas tablas que escriben, así que separarlas no aportaría nada |
+| Eventos | Permiten reaccionar a lo que pasa sin acoplar el código | Los usé donde costaban poco: un evento, `CompetitionImported`, con un listener. Una arquitectura orientada a eventos completa sería demasiado para este alcance |
 | Capas simples de Laravel | Se entiende a la primera, es lo que espera quien conoce Laravel | Si el dominio crece, habrá que separarlo |
 
 Lo que sí hice para dejar abierta la puerta: la dependencia externa está detrás de una sola clase, así que cambiar de
@@ -387,7 +423,8 @@ El mismo `compose.yml` sirve para un servidor. La SPA y la API van en dominios d
    Con `BIND_ADDRESS` los contenedores solo escuchan en el propio servidor. Si el servidor ya usa los puertos 8080 u
    8000, cámbialos con `FRONT_PORT` y `API_PORT`. Si quieres ver la documentación de la API en el servidor, pon
    también `DOCS_PASSWORD` (ver [La API](#5-la-api)).
-2. `docker compose up -d --build`.
+2. `docker compose up -d --build`. Eso levanta también el worker y el programador, así que no hace falta configurar
+   ningún cron en el servidor.
 3. En el Nginx del servidor, un sitio por dominio que reenvíe al puerto que corresponda:
 
 ```nginx
@@ -431,10 +468,11 @@ eso hay que reconstruir si cambian.
 
 ## 11. Lo que quedó pendiente
 
-- **Colas y tareas programadas.** No hay Jobs ni cron. Con más tiempo, la importación iría en un Job que lance el
-  evento `CompetitionImported`, y un cron refrescaría las ligas más consultadas de madrugada, que es cuando sobra cupo.
-- **Importar todas las ligas gratuitas de una vez.** Son 12 ligas y 24 llamadas como mínimo, así que habría que
-  repartirlas en el tiempo respetando el cupo; es el caso natural para la cola.
+- **Seguimiento de la cola.** Los trabajos que agotan sus reintentos quedan en la tabla `failed_jobs` (se ven con
+  `php artisan queue:failed`), pero no hay panel ni aviso. Con más tiempo, Laravel Horizon (necesita Redis) o una
+  notificación cuando un trabajo falle.
+- **Refresco selectivo.** El refresco nocturno actualiza todas las ligas ya importadas, no solo las más consultadas. Con
+  las 12 del plan gratuito son pocas llamadas; con un plan mayor convendría priorizar.
 - **Pruebas de aceptación de punta a punta.** Hay pruebas de la API con base de datos y de la SPA, pero no un navegador
   automatizado que recorra el flujo completo.
 - **Pruebas contra PostgreSQL.** Las pruebas de la API usan SQLite en memoria. La base real es PostgreSQL, y ahí podrían

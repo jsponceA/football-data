@@ -1,4 +1,5 @@
-# Levanta todo el proyecto: PostgreSQL, el API (PHP 8.5-FPM) y la SPA, servidos por un Nginx.
+# Levanta todo el proyecto: PostgreSQL, el API (PHP 8.5-FPM), la SPA (servidas por un Nginx) y dos procesos de
+# segundo plano de la misma API: el worker de la cola y el programador de tareas.
 #
 #   cp .env.example .env     (y poner FOOTBALL_DATA_TOKEN)
 #   docker compose up --build
@@ -67,6 +68,38 @@ services:
         condition: service_healthy
     volumes:
       # claves de Passport, fotos de perfil y registros: sobreviven a recrear el contenedor
+      - app_storage:/var/www/html/storage
+    healthcheck:
+      # PHP-FPM empieza a escuchar al final del arranque, cuando ya están hechas las migraciones y las claves;
+      # el worker y el programador esperan a que esto pase para no repetir ese trabajo al mismo tiempo
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 9000) ? 0 : 1);"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  # ejecuta los trabajos de la cola (importar o refrescar ligas en segundo plano) respetando el límite de football-data
+  worker:
+    build: ./backend
+    restart: ${RESTART_POLICY:-no}
+    environment: *backend-env
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--timeout=90"]
+    depends_on:
+      app:
+        condition: service_healthy
+    volumes:
+      - app_storage:/var/www/html/storage
+
+  # revisa cada minuto si toca alguna tarea programada (hoy: refrescar las ligas todas las noches a las 3:00)
+  scheduler:
+    build: ./backend
+    restart: ${RESTART_POLICY:-no}
+    environment: *backend-env
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      app:
+        condition: service_healthy
+    volumes:
       - app_storage:/var/www/html/storage
 
   web:
