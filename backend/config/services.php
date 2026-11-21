@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'football_data' => [
+        'base_url' => env('FOOTBALL_DATA_URL', 'https://api.football-data.org/v4/'),
+        'token' => env('FOOTBALL_DATA_TOKEN'),
+        // el plan gratis permite 10 por minuto; uso 9 para dejar margen
+        'rate_limit' => (int) env('FOOTBALL_DATA_RATE_LIMIT', 9),
+        'timeout' => (int) env('FOOTBALL_DATA_TIMEOUT', 10),
+        'fresh_hours' => (int) env('FOOTBALL_DATA_FRESH_HOURS', 24),
+    ],
+
 ];
