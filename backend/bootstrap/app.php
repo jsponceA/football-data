@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -42,11 +43,11 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             if ($e instanceof AuthenticationException) {
-                $status = 401;
+                $status = Response::HTTP_UNAUTHORIZED;
             } elseif ($e instanceof AuthorizationException) {
-                $status = 403;
+                $status = Response::HTTP_FORBIDDEN;
             } elseif ($e instanceof ModelNotFoundException) {
-                $status = 404;
+                $status = Response::HTTP_NOT_FOUND;
             } elseif ($e instanceof HttpExceptionInterface) {
                 $status = $e->getStatusCode();
             } else {
@@ -54,13 +55,13 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             $messages = [
-                401 => 'No has iniciado sesión.',
-                403 => 'No tienes permiso para hacer esto.',
-                404 => 'No se encontró lo que buscas.',
-                405 => 'Método no permitido.',
-                429 => 'Demasiadas peticiones, espera un momento e intenta de nuevo.',
-                502 => 'No se pudo obtener la información del servicio externo.',
-                503 => 'El servicio externo no está disponible por ahora.',
+                Response::HTTP_UNAUTHORIZED => 'No has iniciado sesión.',
+                Response::HTTP_FORBIDDEN => 'No tienes permiso para hacer esto.',
+                Response::HTTP_NOT_FOUND => 'No se encontró lo que buscas.',
+                Response::HTTP_METHOD_NOT_ALLOWED => 'Método no permitido.',
+                Response::HTTP_TOO_MANY_REQUESTS => 'Demasiadas peticiones, espera un momento e intenta de nuevo.',
+                Response::HTTP_BAD_GATEWAY => 'No se pudo obtener la información del servicio externo.',
+                Response::HTTP_SERVICE_UNAVAILABLE => 'El servicio externo no está disponible por ahora.',
             ];
 
             $message = $e instanceof ApiException

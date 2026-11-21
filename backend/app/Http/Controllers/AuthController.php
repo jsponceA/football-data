@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class AuthController extends Controller
 {
@@ -18,11 +19,11 @@ class AuthController extends Controller
 
         // mismo mensaje para email o contraseña mala, así no se sabe cuál existe
         if (! $user || ! Hash::check($request->password, $user->password)) {
-            throw new ApiException(401, 'Correo o contraseña incorrectos.');
+            throw new ApiException(HttpResponse::HTTP_UNAUTHORIZED,'Correo o contraseña incorrectos.');
         }
 
         if (! $user->is_active) {
-            throw new ApiException(403, 'Tu usuario está desactivado.');
+            throw new ApiException(HttpResponse::HTTP_FORBIDDEN,'Tu usuario está desactivado.');
         }
 
         return response()->json([

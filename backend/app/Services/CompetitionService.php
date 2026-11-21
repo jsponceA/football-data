@@ -10,14 +10,20 @@ use App\Services\FootballData\ApiRateLimiter;
 use App\Services\FootballData\FootballDataClient;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response;
 
 class CompetitionService
 {
     private const FREE_PLAN = 'TIER_ONE';
 
     // errores donde, si hay copia local, mejor la devuelvo marcada como vieja
-    private const RECOVERABLE = [429, 502, 503];
+    private const RECOVERABLE = [
+        Response::HTTP_TOO_MANY_REQUESTS,
+        Response::HTTP_BAD_GATEWAY,
+        Response::HTTP_SERVICE_UNAVAILABLE,
+    ];
 
     public function __construct(
         private FootballDataClient $client,
@@ -25,25 +31,30 @@ class CompetitionService
     ) {
     }
 
-    public function list(): SyncResult
+    public function list(int $perPage = 15): SyncResult
     {
-        $local = Competition::orderBy('name')->get();
+        $hasLocal = Competition::exists();
 
-        if ($local->isNotEmpty() && $this->isFresh($local->max('synced_at'))) {
-            return new SyncResult($local);
+        if ($hasLocal && $this->listIsFresh()) {
+            return new SyncResult($this->page($perPage));
         }
 
         try {
             $this->syncList();
         } catch (ApiException $e) {
-            if ($local->isEmpty() || ! in_array($e->getStatusCode(), self::RECOVERABLE)) {
+            if (! $hasLocal || ! in_array($e->getStatusCode(), self::RECOVERABLE)) {
                 throw $e;
             }
 
-            return new SyncResult($local, stale: true);
+            return new SyncResult($this->page($perPage), stale: true);
         }
 
-        return new SyncResult(Competition::orderBy('name')->get());
+        return new SyncResult($this->page($perPage));
+    }
+
+    private function page(int $perPage): LengthAwarePaginator
+    {
+        return Competition::orderBy('name')->paginate($perPage);
     }
 
     public function import(int $externalId): SyncResult
@@ -58,12 +69,12 @@ class CompetitionService
             $this->ensureFreePlan($competition);
         } elseif ($this->listIsFresh()) {
             // la lista es reciente y no está: no existe, no gasto una llamada para comprobarlo
-            throw new ApiException(404, 'La liga no existe en el servicio externo.');
+            throw new ApiException(Response::HTTP_NOT_FOUND, 'La liga no existe en el servicio externo.');
         }
 
         // si no tengo la liga hay que pedir también la lista, para saber su plan
         if (! $this->limiter->hasCapacity($competition ? 1 : 2)) {
-            return $this->fallback($competition, new ApiException(429, 'Se alcanzó el límite de consultas al servicio externo.', [
+            return $this->fallback($competition, new ApiException(Response::HTTP_TOO_MANY_REQUESTS, 'Se alcanzó el límite de consultas al servicio externo.', [
                 'Retry-After' => $this->limiter->retryAfter(),
             ]));
         }
@@ -72,7 +83,7 @@ class CompetitionService
             if (! $competition) {
                 $this->syncList();
                 $competition = Competition::where('external_id', $externalId)->first()
-                    ?? throw new ApiException(404, 'La liga no existe en el servicio externo.');
+                    ?? throw new ApiException(Response::HTTP_NOT_FOUND, 'La liga no existe en el servicio externo.');
                 $this->ensureFreePlan($competition);
             }
 
@@ -100,7 +111,7 @@ class CompetitionService
     private function ensureFreePlan(Competition $competition): void
     {
         if ($competition->plan !== self::FREE_PLAN) {
-            throw new ApiException(403, 'Esa liga no está disponible con el plan gratuito.');
+            throw new ApiException(Response::HTTP_FORBIDDEN, 'Esa liga no está disponible con el plan gratuito.');
         }
     }
 

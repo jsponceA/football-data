@@ -7,6 +7,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class FootballDataClient
 {
@@ -30,11 +31,11 @@ class FootballDataClient
         $config = config('services.football_data');
 
         if (empty($config['token'])) {
-            throw new ApiException(503, 'El servicio externo no está configurado.');
+            throw new ApiException(HttpResponse::HTTP_SERVICE_UNAVAILABLE, 'El servicio externo no está configurado.');
         }
 
         if (! $this->limiter->hasCapacity()) {
-            throw new ApiException(429, 'Se alcanzó el límite de consultas al servicio externo.', [
+            throw new ApiException(HttpResponse::HTTP_TOO_MANY_REQUESTS, 'Se alcanzó el límite de consultas al servicio externo.', [
                 'Retry-After' => $this->limiter->retryAfter(),
             ]);
         }
@@ -51,7 +52,7 @@ class FootballDataClient
         } catch (ConnectionException $e) {
             Log::warning('football-data no respondió', ['path' => $path, 'error' => $e->getMessage()]);
 
-            throw new ApiException(503, 'El servicio externo no respondió.');
+            throw new ApiException(HttpResponse::HTTP_SERVICE_UNAVAILABLE, 'El servicio externo no respondió.');
         }
 
         return $this->parse($response, $path);
@@ -65,18 +66,18 @@ class FootballDataClient
 
         $status = $response->status();
 
-        if ($status === 403) {
-            throw new ApiException(403, 'Esa liga no está disponible con el plan gratuito.');
+        if ($status === HttpResponse::HTTP_FORBIDDEN) {
+            throw new ApiException(HttpResponse::HTTP_FORBIDDEN, 'Esa liga no está disponible con el plan gratuito.');
         }
 
-        if ($status === 404) {
-            throw new ApiException(404, 'La liga no existe en el servicio externo.');
+        if ($status === HttpResponse::HTTP_NOT_FOUND) {
+            throw new ApiException(HttpResponse::HTTP_NOT_FOUND, 'La liga no existe en el servicio externo.');
         }
 
-        if ($status === 429) {
+        if ($status === HttpResponse::HTTP_TOO_MANY_REQUESTS) {
             $retryAfter = (int) $response->header('Retry-After') ?: ($this->limiter->retryAfter() ?: 60);
 
-            throw new ApiException(429, 'El servicio externo pidió esperar antes de volver a consultar.', [
+            throw new ApiException(HttpResponse::HTTP_TOO_MANY_REQUESTS, 'El servicio externo pidió esperar antes de volver a consultar.', [
                 'Retry-After' => $retryAfter,
             ]);
         }
@@ -84,6 +85,6 @@ class FootballDataClient
         // 400/401 (token malo) y 5xx son problema del servicio o nuestro, no del usuario
         Log::error('football-data respondió con error', ['path' => $path, 'status' => $status]);
 
-        throw new ApiException(502, 'El servicio externo devolvió un error.');
+        throw new ApiException(HttpResponse::HTTP_BAD_GATEWAY, 'El servicio externo devolvió un error.');
     }
 }

@@ -17,7 +17,7 @@ class TeamController extends Controller
     public function index(TeamIndexRequest $request): AnonymousResourceCollection
     {
         return TeamResource::collection(
-            $this->teams->paginate($request->validated(), $request->integer('per_page', 20)),
+            $this->teams->paginate($request->validated(), $this->perPage($request)),
         );
     }
 

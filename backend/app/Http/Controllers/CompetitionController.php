@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PaginationRequest;
 use App\Http\Resources\CompetitionResource;
 use App\Services\CompetitionService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -12,9 +13,9 @@ class CompetitionController extends Controller
     {
     }
 
-    public function index(): AnonymousResourceCollection
+    public function index(PaginationRequest $request): AnonymousResourceCollection
     {
-        $result = $this->competitions->list();
+        $result = $this->competitions->list($this->perPage($request));
 
         return CompetitionResource::collection($result->data)
             ->additional(['meta' => ['stale' => $result->stale]]);

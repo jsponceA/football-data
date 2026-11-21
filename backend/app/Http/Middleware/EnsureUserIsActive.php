@@ -13,7 +13,7 @@ class EnsureUserIsActive
     {
         // aunque el token siga vigente
         if (! $request->user()?->is_active) {
-            throw new ApiException(403, 'Tu usuario está desactivado.');
+            throw new ApiException(Response::HTTP_FORBIDDEN,'Tu usuario está desactivado.');
         }
 
         return $next($request);

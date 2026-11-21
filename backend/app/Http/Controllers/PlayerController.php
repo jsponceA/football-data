@@ -16,7 +16,7 @@ class PlayerController extends Controller
     public function index(PlayerIndexRequest $request): AnonymousResourceCollection
     {
         return PlayerResource::collection(
-            $this->players->paginate($request->validated(), $request->integer('per_page', 20)),
+            $this->players->paginate($request->validated(), $this->perPage($request)),
         );
     }
 }
