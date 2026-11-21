@@ -97,3 +97,12 @@
   border-color: rgb(var(--v-theme-primary));
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
+
+/* liga de pago: se ve apagada y no reacciona al pasar el cursor */
+.competition-card--locked,
+.competition-card--locked:hover {
+  opacity: 0.6;
+  border-color: rgba(var(--v-border-color), var(--v-border-opacity));
+  box-shadow: none;
+  cursor: default;
+}

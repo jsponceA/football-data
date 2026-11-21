@@ -46,6 +46,13 @@ export function typeLabel(value: string) {
   return competitionTypes[value] ?? value
 }
 
+// el plan gratuito de football-data solo da acceso a las ligas TIER_ONE; las demás se rechazan con 403
+const FREE_PLAN = 'TIER_ONE'
+
+export function isFreePlan(plan: string) {
+  return plan === FREE_PLAN
+}
+
 // líneas del campo, en el orden en que se muestran; el color distingue cada una de un vistazo
 export const positionGroups = [
   { label: 'Porteros', color: 'warning', test: /^goalkeeper$/i },

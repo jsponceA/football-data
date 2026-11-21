@@ -1,12 +1,12 @@
 flowchart TB
   subgraph SPA["SPA Vue 3 (frontend)"]
     UI["Pantallas: ligas, equipos,<br/>jugadores y usuarios"]
-    ST["Pinia: sesión y permisos"]
+    ST["Pinia: sesión y permisos<br/>CASL: rutas y botones según los permisos"]
   end
 
   subgraph API["API Laravel 13 · PHP 8.5 (backend)"]
     AUTH["Passport<br/>valida el token Bearer"]
-    ACL["Roles y permisos<br/>(se validan aquí, en el servidor)"]
+    ACL["Roles y permisos (spatie)<br/>se validan aquí, en el servidor"]
     CTRL["Controladores delgados<br/>FormRequest · Resource"]
     SVC["Servicios<br/>importación y consulta"]
     LIM["Límite de salida<br/>máx. 9 peticiones por minuto"]
@@ -17,7 +17,7 @@ flowchart TB
   EXT["football-data.org<br/>límite: 10 peticiones por minuto"]
 
   UI --> ST
-  ST -- "POST /login · GET /me<br/>Authorization: Bearer" --> AUTH
+  ST -- "POST /login · GET /me (permisos en formato CASL)<br/>Authorization: Bearer" --> AUTH
   AUTH --> ACL --> CTRL --> SVC
   SVC -- "1. lee y guarda<br/>(siempre primero)" --> DB
   SVC -- "2. solo si el dato no es<br/>reciente (24 h)" --> LIM

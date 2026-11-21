@@ -6,7 +6,7 @@ import DataState from '@/components/DataState.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import { usePaginatedList } from '@/composables/usePaginatedList'
-import { formatDateTime, timeAgo, typeLabel } from '@/utils/format'
+import { formatDateTime, isFreePlan, timeAgo, typeLabel } from '@/utils/format'
 
 const { items, meta, page, loading, error, load } = usePaginatedList(getCompetitions)
 
@@ -33,7 +33,16 @@ const stale = computed(() => meta.value?.stale === true)
     <v-progress-linear :active="loading" indeterminate class="mb-2" />
     <v-row>
       <v-col v-for="competition in items" :key="competition.id" cols="12" sm="6" md="4" xl="3">
-        <v-card :to="{ name: 'competition', params: { id: competition.id } }" border flat class="competition-card" height="100%">
+        <!-- las ligas de pago no se pueden abrir: el servicio gratuito las rechaza, así que no se ofrece la entrada -->
+        <v-card
+          :to="isFreePlan(competition.plan) ? { name: 'competition', params: { id: competition.id } } : undefined"
+          border
+          flat
+          class="competition-card"
+          :class="{ 'competition-card--locked': !isFreePlan(competition.plan) }"
+          height="100%"
+          :title="isFreePlan(competition.plan) ? undefined : 'No está disponible con el plan gratuito'"
+        >
           <div class="d-flex align-center ga-4 pa-4">
             <div class="emblem-tile">
               <img v-if="competition.emblem" :src="competition.emblem" :alt="competition.name" />
@@ -53,8 +62,12 @@ const stale = computed(() => meta.value?.stale === true)
             <v-chip size="x-small" label>{{ competition.code }}</v-chip>
             <v-chip size="x-small" label variant="tonal">{{ typeLabel(competition.type) }}</v-chip>
             <v-spacer />
+            <span v-if="!isFreePlan(competition.plan)" class="d-flex align-center ga-1 text-medium-emphasis">
+              <v-icon icon="mdi-lock-outline" size="16" />
+              Plan de pago
+            </span>
             <span
-              v-if="competition.imported_at"
+              v-else-if="competition.imported_at"
               class="d-flex align-center ga-1 text-success"
               :title="`Datos actualizados el ${formatDateTime(competition.imported_at)}`"
             >

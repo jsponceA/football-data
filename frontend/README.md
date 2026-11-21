@@ -1,48 +1,39 @@
-# frontend
+# Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+SPA de Football Data hecha con Vue 3, TypeScript, Vuetify, Pinia, Vue Router y CASL. La explicación general del
+proyecto y cómo levantarlo completo está en el [README de la raíz](../README.md).
 
-## Recommended IDE Setup
+## Comandos
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
 npm install
+cp .env.example .env     # apunta a la API en http://localhost:8000/api
+npm run dev              # http://localhost:5173
 ```
 
-### Compile and Hot-Reload for Development
+| Comando | Qué hace |
+| --- | --- |
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build-only` | Compila para producción en `dist/` |
+| `npm run preview` | Sirve lo compilado (aquí se puede probar la PWA) |
+| `npm run type-check` | Revisa los tipos con `vue-tsc` |
+| `npm run test:unit` | Pruebas con Vitest |
+| `npm run format` | Da formato con Prettier |
 
-```sh
-npm run dev
+Necesita Node 22.18 o superior.
+
+## Estructura
+
 ```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-npm run test:unit
+src/
+  api/          Llamadas a la API (un archivo por recurso) y el cliente de axios
+  components/   Componentes reutilizables
+  composables/  Lógica compartida (listados paginados, formularios, avisos...)
+  layouts/      Estructura de las pantallas con sesión
+  plugins/      Permisos con CASL y paletas de color
+  router/       Rutas y guardián de sesión y permisos
+  stores/       Pinia: sesión y permisos de quien entró
+  utils/        Formato, validaciones y ayudas
+  views/        Una pantalla por archivo
+  __tests__/    Pruebas, agrupadas por la carpeta que prueban
 ```

@@ -6,6 +6,7 @@ import {
   formatDate,
   formatDateTime,
   initials,
+  isFreePlan,
   positionColor,
   positionGroup,
   positionLabel,
@@ -77,6 +78,12 @@ describe('textos', () => {
     expect(typeLabel('LEAGUE')).toBe('Liga')
     expect(typeLabel('CUP')).toBe('Copa')
     expect(typeLabel('OTRA')).toBe('OTRA')
+  })
+
+  it('isFreePlan solo acepta el plan gratuito de football-data', () => {
+    expect(isFreePlan('TIER_ONE')).toBe(true)
+    expect(isFreePlan('TIER_FOUR')).toBe(false)
+    expect(isFreePlan('')).toBe(false)
   })
 
   it('initials usa la primera y la última palabra', () => {

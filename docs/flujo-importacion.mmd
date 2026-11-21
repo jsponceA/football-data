@@ -9,43 +9,51 @@ sequenceDiagram
   participant X as football-data.org
 
   S->>A: GET /competitions/{id} con token Bearer
-  A->>A: Passport valida el token (401) y el permiso de importar (403)
+  A->>A: Passport valida el token (401) y el permiso competitions.view (403)
   A->>I: importar la liga
   I->>D: ¿Liga importada hace menos de 24 h?
 
   alt Datos recientes
     D-->>I: liga, equipos y jugadores guardados
     I-->>A: datos locales
-  else Viejos o inexistentes
-    I->>L: ¿Hay cupo para 2 llamadas? (máx. 9 por minuto)
+  else Viejos o sin importar
+    opt Liga conocida pero que no es del plan gratuito
+      I-->>A: error 403, sin gastar ninguna llamada
+    end
+    opt Liga desconocida y lista de ligas reciente
+      I-->>A: error 404, sin gastar ninguna llamada
+    end
+    I->>L: ¿Hay cupo? (2 llamadas si la liga no se conoce: lista + equipos, y 1 si ya se conoce)
     alt Sin cupo
       L-->>I: no
       alt Hay copia local
-        I-->>A: copia local marcada como desactualizada
+        I-->>A: copia local marcada como desactualizada (meta.stale)
       else No hay copia
         I-->>A: error 429 con Retry-After
       end
     else Con cupo
-      L-->>I: sí, cupo reservado
-      I->>F: pedir liga y equipos
-      F->>X: GET /v4/competitions/{id} y GET /v4/competitions/{id}/teams
-      alt Liga de pago (403)
-        X-->>F: 403
-        I-->>A: error 403, liga fuera del plan gratuito
-      else Liga inexistente (404)
-        X-->>F: 404
-        I-->>A: error 404
-      else Sin respuesta, error o límite externo
+      L-->>I: sí (cada llamada se cuenta antes de hacerla)
+      opt La liga no se conocía
+        I->>F: pedir la lista de ligas
+        F->>X: GET /v4/competitions
+        X-->>F: ligas con su plan
+        F-->>I: lista
+        I->>D: guarda la lista (upsert)
+        Note over I: si la liga no está en la lista, 404, y si no es del plan gratuito, 403
+      end
+      I->>F: pedir los equipos de la liga
+      F->>X: GET /v4/competitions/{id}/teams
+      alt Sin respuesta, error o límite del servicio externo
         X-->>F: fallo
         alt Hay copia local
-          I-->>A: copia local marcada como desactualizada
+          I-->>A: copia local marcada como desactualizada (meta.stale)
         else No hay copia
           I-->>A: error 502 o 503
         end
       else Respuesta correcta
-        X-->>F: liga, equipos y plantillas
+        X-->>F: equipos con sus plantillas
         F-->>I: datos de la liga
-        I->>D: transacción: guarda liga, equipos y jugadores (upsert)
+        I->>D: transacción: guarda equipos y jugadores (upsert) y retira a los que ya no están en la plantilla
         I-->>A: datos recién guardados
       end
     end
