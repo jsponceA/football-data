@@ -12,10 +12,12 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use RuntimeException;
+use Tests\Concerns\FakesFootballData;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
 {
+    use FakesFootballData;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -23,6 +25,8 @@ class RegistrationTest extends TestCase
         parent::setUp();
 
         $this->seed([PassportClientSeeder::class, RolePermissionSeeder::class]);
+        $this->configurarFootballData();
+        $this->fingirApi();
     }
 
     private function datos(array $cambios = []): array
