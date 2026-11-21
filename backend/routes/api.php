@@ -2,8 +2,11 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompetitionController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PlayerController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 // 10 intentos por minuto contra la fuerza bruta
@@ -26,4 +29,24 @@ Route::middleware(['auth:api', 'active'])->group(function () {
     });
 
     Route::get('/players', [PlayerController::class, 'index'])->middleware('permission:players.view');
+
+    Route::middleware('permission:users.manage')->group(function () {
+        Route::get('/users', [UserController::class, 'index']);
+        Route::post('/users', [UserController::class, 'store']);
+        Route::get('/users/{user}', [UserController::class, 'show'])->whereNumber('user');
+        Route::put('/users/{user}', [UserController::class, 'update'])->whereNumber('user');
+    });
+
+    // quien administra usuarios necesita ver los roles para asignarlos
+    Route::middleware('permission:users.manage|roles.manage')->group(function () {
+        Route::get('/roles', [RoleController::class, 'index']);
+        Route::get('/roles/{role}', [RoleController::class, 'show'])->whereNumber('role');
+    });
+
+    Route::middleware('permission:roles.manage')->group(function () {
+        Route::post('/roles', [RoleController::class, 'store']);
+        Route::put('/roles/{role}', [RoleController::class, 'update'])->whereNumber('role');
+        Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->whereNumber('role');
+        Route::get('/permissions', [PermissionController::class, 'index']);
+    });
 });

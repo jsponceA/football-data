@@ -4,18 +4,17 @@ namespace Tests\Feature;
 
 use App\Models\Player;
 use App\Models\Team;
-use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
-use Laravel\Passport\Passport;
 use Spatie\Permission\Models\Role;
+use Tests\Concerns\ActsAsUsers;
 use Tests\Concerns\FakesFootballData;
 use Tests\TestCase;
 
 class EndpointsTest extends TestCase
 {
-    use FakesFootballData, RefreshDatabase;
+    use ActsAsUsers, FakesFootballData, RefreshDatabase;
 
     protected function setUp(): void
     {
@@ -23,15 +22,6 @@ class EndpointsTest extends TestCase
 
         $this->configurarFootballData();
         $this->seed(RolePermissionSeeder::class);
-    }
-
-    private function entrarComo(string $rol): User
-    {
-        $user = User::factory()->create(['is_active' => true]);
-        $user->assignRole($rol);
-        Passport::actingAs($user, [], 'api');
-
-        return $user;
     }
 
     private function equipoConJugadores(int $id, string $nombre, array $jugadores): Team
