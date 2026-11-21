@@ -54,14 +54,14 @@ class FootballDataClientTest extends TestCase
     {
         Http::fake(['*' => Http::response([], 403)]);
 
-        $this->assertSame(403, $this->falla(fn () => $this->cliente()->competition(2152))->getStatusCode());
+        $this->assertSame(403, $this->falla(fn () => $this->cliente()->competitionTeams(2152))->getStatusCode());
     }
 
     public function test_liga_inexistente_da_404(): void
     {
         Http::fake(['*' => Http::response([], 404)]);
 
-        $this->assertSame(404, $this->falla(fn () => $this->cliente()->competition(999999))->getStatusCode());
+        $this->assertSame(404, $this->falla(fn () => $this->cliente()->competitionTeams(999999))->getStatusCode());
     }
 
     public function test_limite_del_servicio_externo_da_429_con_retry_after(): void

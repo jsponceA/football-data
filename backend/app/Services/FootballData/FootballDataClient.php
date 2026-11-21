@@ -19,11 +19,6 @@ class FootballDataClient
         return $this->get('competitions');
     }
 
-    public function competition(int|string $id): array
-    {
-        return $this->get("competitions/{$id}");
-    }
-
     // trae los equipos con su plantilla en una sola llamada
     public function competitionTeams(int|string $id): array
     {
