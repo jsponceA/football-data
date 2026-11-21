@@ -3,18 +3,23 @@ import { ref } from 'vue'
 import type { SubmitEventPromise } from 'vuetify'
 import { forgotPassword } from '@/api/auth'
 import AuthShell from '@/components/AuthShell.vue'
+import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { useFormSubmit } from '@/composables/useFormSubmit'
 import { emailFormat, required } from '@/utils/rules'
 
 const email = ref('')
 // el backend responde lo mismo exista o no el correo; ese texto es el que se muestra
 const sent = ref('')
+const captcha = ref('')
+const widget = ref<InstanceType<typeof TurnstileWidget> | null>(null)
 const { loading, error, fieldErrors, handleSubmit } = useFormSubmit()
 
-function submit(event: SubmitEventPromise) {
-  return handleSubmit(event, async () => {
-    sent.value = await forgotPassword(email.value)
+async function submit(event: SubmitEventPromise) {
+  const ok = await handleSubmit(event, async () => {
+    sent.value = await forgotPassword(email.value, captcha.value)
   })
+  // el token del captcha sirve una sola vez, aunque el envío haya fallado
+  if (!ok) widget.value?.reset()
 }
 </script>
 
@@ -53,6 +58,9 @@ function submit(event: SubmitEventPromise) {
           :rules="[required, emailFormat]"
           :error-messages="fieldErrors.email"
         />
+
+        <TurnstileWidget ref="widget" v-model="captcha" />
+
         <v-btn
           type="submit"
           color="primary"

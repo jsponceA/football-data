@@ -30,8 +30,16 @@ export const useAuthStore = defineStore(
     }
 
     // el registro deja la sesión abierta, igual que el login
-    async function register(name: string, email: string, password: string, confirmation: string) {
-      startSession(await authApi.register({ name, email, password, password_confirmation: confirmation }))
+    async function register(name: string, email: string, password: string, confirmation: string, captcha?: string) {
+      startSession(
+        await authApi.register({
+          name,
+          email,
+          password,
+          password_confirmation: confirmation,
+          ...(captcha ? { turnstile_token: captcha } : {}),
+        }),
+      )
     }
 
     async function refresh() {

@@ -11,14 +11,24 @@ export async function login(email: string, password: string) {
 }
 
 // responde igual que el login: la persona queda con la sesión abierta
-export async function register(payload: { name: string; email: string; password: string; password_confirmation: string }) {
+export async function register(payload: {
+  name: string
+  email: string
+  password: string
+  password_confirmation: string
+  // solo si el captcha está activo
+  turnstile_token?: string
+}) {
   const { data } = await http.post<{ token: string; user: SessionUser }>('/register', payload)
   return data
 }
 
 // devuelve el texto que el backend quiere mostrar; es el mismo exista o no el correo
-export async function forgotPassword(email: string) {
-  const { data } = await http.post<{ message: string }>('/forgot-password', { email })
+export async function forgotPassword(email: string, turnstileToken?: string) {
+  const { data } = await http.post<{ message: string }>('/forgot-password', {
+    email,
+    ...(turnstileToken ? { turnstile_token: turnstileToken } : {}),
+  })
   return data.message
 }
 

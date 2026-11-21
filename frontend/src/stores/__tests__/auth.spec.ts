@@ -90,6 +90,15 @@ describe('sesión', () => {
     expect(ability.can('manage', 'users')).toBe(false)
   })
 
+  it('si hay captcha, el token viaja con el registro', async () => {
+    vi.mocked(authApi.register).mockResolvedValue({ token: 'nuevo', user: consulta })
+    const auth = useAuthStore()
+
+    await auth.register('Ana', 'ana@example.com', 'password', 'password', 'token-captcha')
+
+    expect(authApi.register).toHaveBeenCalledWith(expect.objectContaining({ turnstile_token: 'token-captcha' }))
+  })
+
   it('si el registro falla no queda sesión', async () => {
     vi.mocked(authApi.register).mockRejectedValue(new Error('correo repetido'))
     const auth = useAuthStore()

@@ -35,6 +35,13 @@ return [
         ],
     ],
 
+    // captcha de Cloudflare; sin secreto queda apagado (útil en local) y el formulario no lo pide
+    'turnstile' => [
+        'secret' => env('TURNSTILE_SECRET'),
+        'verify_url' => env('TURNSTILE_VERIFY_URL', 'https://challenges.cloudflare.com/turnstile/v0/siteverify'),
+        'timeout' => (int) env('TURNSTILE_TIMEOUT', 5),
+    ],
+
     'football_data' => [
         'base_url' => env('FOOTBALL_DATA_URL', 'https://api.football-data.org/v4/'),
         'token' => env('FOOTBALL_DATA_TOKEN'),
