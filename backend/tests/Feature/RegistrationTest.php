@@ -3,10 +3,15 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Notifications\WelcomeNotification;
 use Database\Seeders\PassportClientSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\Events\NotificationSending;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
+use RuntimeException;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -90,6 +95,53 @@ class RegistrationTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors(['password']);
 
         $this->assertSame($antes, User::count());
+    }
+
+    public function test_al_registrarse_llega_un_correo_de_bienvenida(): void
+    {
+        Notification::fake();
+
+        $this->postJson('/api/register', $this->datos())->assertCreated();
+
+        $user = User::where('email', 'ana@example.com')->first();
+        Notification::assertSentTo($user, WelcomeNotification::class);
+        Notification::assertCount(1);
+    }
+
+    public function test_el_correo_de_bienvenida_saluda_por_nombre_y_enlaza_al_login_de_la_spa(): void
+    {
+        config(['app.frontend_url' => 'https://app.example.com/']);
+        $user = User::factory()->create(['name' => 'Ana Pérez', 'email' => 'ana@example.com']);
+
+        $correo = (new WelcomeNotification())->toMail($user);
+        $html = (string) $correo->render();
+
+        $this->assertSame('Te damos la bienvenida a Football Data', $correo->subject);
+        $this->assertStringContainsString('Hola, Ana Pérez', $html);
+        $this->assertStringContainsString('https://app.example.com/login', $html);
+        // nunca va la contraseña en un correo
+        $this->assertStringNotContainsString('password', strtolower($html));
+    }
+
+    public function test_un_registro_invalido_no_manda_correo(): void
+    {
+        Notification::fake();
+
+        $this->postJson('/api/register', $this->datos(['email' => 'no-es-correo']))->assertUnprocessable();
+
+        Notification::assertNothingSent();
+    }
+
+    public function test_si_el_correo_falla_la_cuenta_se_crea_igual_y_la_persona_entra(): void
+    {
+        // el proveedor de correo (Resend) puede estar caído: el registro no debe romperse por eso
+        Event::listen(NotificationSending::class, fn () => throw new RuntimeException('proveedor de correo caído'));
+
+        $this->postJson('/api/register', $this->datos())
+            ->assertCreated()
+            ->assertJsonPath('user.email', 'ana@example.com');
+
+        $this->assertDatabaseHas('users', ['email' => 'ana@example.com']);
     }
 
     public function test_el_registro_tiene_tope_de_intentos_por_minuto(): void

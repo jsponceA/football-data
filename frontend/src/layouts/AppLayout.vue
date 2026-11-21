@@ -77,12 +77,14 @@ async function logout() {
     <template #append>
       <v-divider />
       <v-list nav density="comfortable">
-        <v-list-item
-          :to="{ name: 'profile' }"
-          prepend-icon="mdi-account-circle-outline"
-          title="Mi perfil"
-          rounded="lg"
-        >
+        <v-list-item :to="{ name: 'profile' }" title="Mi perfil" rounded="lg">
+          <!-- con foto se ve la foto; sin ella, el icono de siempre -->
+          <template #prepend>
+            <v-avatar v-if="auth.user?.photo_url" size="28">
+              <v-img :src="auth.user.photo_url" alt="" cover />
+            </v-avatar>
+            <v-icon v-else icon="mdi-account-circle-outline" />
+          </template>
           <v-tooltip v-if="isRail" activator="parent" location="end" text="Mi perfil" />
         </v-list-item>
       </v-list>

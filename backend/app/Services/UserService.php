@@ -3,12 +3,14 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Notifications\WelcomeNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class UserService
 {
@@ -47,7 +49,7 @@ class UserService
     // quien se registra solo entra como consulta; un administrador puede darle más permisos después
     public function register(array $data): User
     {
-        return DB::transaction(function () use ($data) {
+        $user = DB::transaction(function () use ($data) {
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
@@ -59,6 +61,16 @@ class UserService
 
             return $user->load('roles');
         });
+
+        // el correo de bienvenida va fuera de la transacción y sin romper el registro: si el proveedor
+        // de correo falla, la cuenta ya existe y la persona debe poder entrar igual
+        try {
+            $user->notify(new WelcomeNotification());
+        } catch (Throwable $e) {
+            report($e);
+        }
+
+        return $user;
     }
 
     public function update(User $user, array $data, User $actor): User
