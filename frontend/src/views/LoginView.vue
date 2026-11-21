@@ -2,9 +2,10 @@
 import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { SubmitEventPromise } from 'vuetify'
-import { ApiError } from '@/api/http'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+import { useFormSubmit } from '@/composables/useFormSubmit'
 import { useAuthStore } from '@/stores/auth'
+import { emailFormat, required } from '@/utils/rules'
 import logo from '@/assets/img/logo.webp'
 
 const auth = useAuthStore()
@@ -13,36 +14,15 @@ const router = useRouter()
 
 const form = reactive({ email: '', password: '' })
 const showPassword = ref(false)
-const loading = ref(false)
-const error = ref('')
-const fieldErrors = ref<Record<string, string[]>>({})
+const { loading, error, fieldErrors, handleSubmit } = useFormSubmit()
 
-const required = (v: string) => !!v || 'Este campo es obligatorio.'
-const emailFormat = (v: string) => /.+@.+\..+/.test(v) || 'Escribe un correo válido.'
-
-async function submit(event: SubmitEventPromise) {
-  const { valid } = await event
-  if (!valid) return
-
-  loading.value = true
-  error.value = ''
-  fieldErrors.value = {}
-
-  try {
+function submit(event: SubmitEventPromise) {
+  return handleSubmit(event, async () => {
     await auth.login(form.email, form.password)
     const redirect = route.query.redirect
     // solo rutas internas, para que nadie arme un enlace que nos saque del sitio
     router.push(typeof redirect === 'string' && redirect.startsWith('/') ? redirect : { name: 'home' })
-  } catch (e) {
-    if (e instanceof ApiError) {
-      error.value = e.message
-      fieldErrors.value = e.errors
-    } else {
-      error.value = 'Ocurrió un error inesperado.'
-    }
-  } finally {
-    loading.value = false
-  }
+  })
 }
 </script>
 

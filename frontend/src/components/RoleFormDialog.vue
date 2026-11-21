@@ -1,29 +1,27 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import type { SubmitEventPromise } from 'vuetify'
 import { createRole, updateRole } from '@/api/admin'
-import { ApiError } from '@/api/http'
+import { useFormSubmit } from '@/composables/useFormSubmit'
 import { useNotify } from '@/composables/useNotify'
 import type { Permission, Role } from '@/types/api'
 import { describePermission } from '@/utils/permissions'
+import { required } from '@/utils/rules'
 
 const props = defineProps<{ role: Role | null; permissions: Permission[] }>()
 const open = defineModel<boolean>({ required: true })
 const emit = defineEmits<{ saved: [] }>()
 
 const { notify } = useNotify()
+const { loading: saving, error, fieldErrors, handleSubmit, reset } = useFormSubmit()
 
 const form = reactive({ name: '', permissions: [] as string[] })
-const saving = ref(false)
-const error = ref('')
-const fieldErrors = ref<Record<string, string[]>>({})
 
 watch(open, (value) => {
   if (!value) return
   form.name = props.role?.name ?? ''
   form.permissions = [...(props.role?.permissions ?? [])]
-  error.value = ''
-  fieldErrors.value = {}
+  reset()
 })
 
 // se agrupan por sección para que no sea una lista larga de checkboxes sueltos
@@ -37,36 +35,21 @@ const groups = computed(() => {
   return [...map.values()]
 })
 
-const required = (v: string) => !!v.trim() || 'Este campo es obligatorio.'
-
 async function submit(event: SubmitEventPromise) {
-  const { valid } = await event
-  if (!valid) return
-
-  saving.value = true
-  error.value = ''
-  fieldErrors.value = {}
-
   const payload = { name: form.name.trim(), permissions: form.permissions }
 
-  try {
+  const saved = await handleSubmit(event, async () => {
     if (props.role) {
       await updateRole(props.role.id, payload)
     } else {
       await createRole(payload)
     }
+  })
+
+  if (saved) {
     notify(props.role ? 'Rol actualizado.' : 'Rol creado.')
     open.value = false
     emit('saved')
-  } catch (e) {
-    if (e instanceof ApiError) {
-      error.value = e.message
-      fieldErrors.value = e.errors
-    } else {
-      error.value = 'Ocurrió un error inesperado.'
-    }
-  } finally {
-    saving.value = false
   }
 }
 </script>
