@@ -109,12 +109,15 @@ Abre <http://localhost:5173>. El archivo `frontend/.env` ya apunta a la API en `
 
 ## 2. Usuarios de prueba
 
-Los crean los seeders. La contraseña por defecto es `password`; se puede cambiar con `SEED_USER_PASSWORD`.
+Los crean los seeders al preparar la base de datos.
 
-| Correo | Rol | Qué puede hacer |
-| --- | --- | --- |
-| `admin@example.com` | admin | Todo: ver y importar ligas, equipos y jugadores, y administrar usuarios y roles |
-| `consulta@example.com` | solo-consulta | Solo ver ligas, equipos y jugadores |
+| Correo | Contraseña | Rol | Qué puede hacer |
+| --- | --- | --- | --- |
+| `admin@example.com` | `password` | admin | Todo: ver y importar ligas, equipos y jugadores, y administrar usuarios y roles |
+| `consulta@example.com` | `password` | solo-consulta | Solo ver ligas, equipos y jugadores |
+
+Esa contraseña es la que se usa si no cambias nada. Se puede cambiar con `SEED_USER_PASSWORD` antes de crear la base
+de datos; en un servidor real conviene hacerlo.
 
 Cualquier persona también puede crear su cuenta desde la pantalla de registro. Entra con el rol de solo consulta y un
 administrador puede cambiárselo después.
