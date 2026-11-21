@@ -18,6 +18,7 @@ import { abilitiesPlugin } from '@casl/vue'
 import App from './App.vue'
 import router from './router'
 import { setAuthHandlers } from './api/http'
+import { applyAppearance } from './composables/useAppearance'
 import { ability } from './plugins/ability'
 import { useAuthStore } from './stores/auth'
 import { useUiStore } from './stores/ui'
@@ -47,8 +48,8 @@ const app = createApp(App)
 app.use(vuetify)
 app.use(pinia)
 
-// el tema elegido vive en Pinia, que no existía cuando se creó Vuetify
-vuetify.theme.change(useUiStore().theme)
+// lo elegido (tema y color) vive en Pinia, que no existía cuando se creó Vuetify
+applyAppearance(vuetify.theme, useUiStore())
 
 const auth = useAuthStore()
 // las reglas de CASL no se persisten, se reconstruyen desde el usuario guardado

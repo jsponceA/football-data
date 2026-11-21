@@ -1,21 +1,38 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { useAbility } from '@casl/vue'
+import SettingsDrawer from '@/components/SettingsDrawer.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useUiStore } from '@/stores/ui'
 import { sections } from '@/router/navigation'
 import logo from '@/assets/img/logo.webp'
 import type { AppAbility } from '@/plugins/ability'
 
 const auth = useAuthStore()
+const ui = useUiStore()
 const router = useRouter()
 const { mobile } = useDisplay()
 const { can } = useAbility<AppAbility>()
 
-// null = abierto en escritorio y cerrado en móvil, donde lo abre el botón de la barra
-const drawer = ref<boolean | null>(null)
+// en móvil el menú es un cajón que se abre y cierra; en escritorio siempre está y solo se reduce a iconos
+const drawer = ref(!mobile.value)
+watch(mobile, (value) => (drawer.value = !value))
+
+const isRail = computed(() => ui.rail && !mobile.value)
+
+function toggleMenu() {
+  if (mobile.value) {
+    drawer.value = !drawer.value
+  } else {
+    ui.rail = !ui.rail
+  }
+}
+
+const settings = ref(false)
+const year = new Date().getFullYear()
 
 const visibleSections = computed(() => sections.filter((s) => can(s.ability.action, s.ability.subject)))
 
@@ -26,8 +43,8 @@ async function logout() {
 </script>
 
 <template>
-  <v-navigation-drawer v-model="drawer">
-    <v-list-item title="Football Data" subtitle="Ligas, equipos y jugadores" class="py-3">
+  <v-navigation-drawer v-model="drawer" :rail="isRail">
+    <v-list-item title="Football Data" class="py-3">
       <template #prepend>
         <v-avatar color="primary" size="40" class="mr-3">
           <img :src="logo" alt="" width="34" height="34" />
@@ -43,14 +60,27 @@ async function logout() {
         :prepend-icon="section.icon"
         :title="section.title"
         rounded="lg"
-      />
+      >
+        <!-- compacto solo se ven los iconos, así que el nombre sale al pasar el cursor -->
+        <v-tooltip v-if="isRail" activator="parent" location="end" :text="section.title" />
+      </v-list-item>
     </v-list>
   </v-navigation-drawer>
 
   <v-app-bar flat border="b">
-    <v-app-bar-nav-icon v-if="mobile" aria-label="Abrir menú" @click="drawer = !drawer" />
+    <v-app-bar-nav-icon
+      :aria-label="mobile ? 'Mostrar u ocultar el menú' : 'Contraer o expandir el menú'"
+      @click="toggleMenu"
+    />
     <v-spacer />
     <ThemeToggle />
+    <v-btn
+      icon="mdi-cog-outline"
+      variant="text"
+      aria-label="Personalizar"
+      title="Personalizar"
+      @click="settings = true"
+    />
 
     <v-menu>
       <template #activator="{ props }">
@@ -74,9 +104,24 @@ async function logout() {
     </v-menu>
   </v-app-bar>
 
-  <v-main>
-    <v-container class="py-6" style="max-width: 1200px">
+  <SettingsDrawer v-model="settings" />
+
+  <!-- el footer va dentro del main y no fijo: baja con el contenido y se pega al final si hay poco -->
+  <v-main class="d-flex flex-column">
+    <v-container class="py-6 flex-grow-1" style="max-width: 1200px">
       <router-view />
     </v-container>
+
+    <v-footer border height="44" class="flex-grow-0 flex-shrink-0 text-caption text-medium-emphasis">
+      <div class="d-flex flex-wrap justify-space-between align-center ga-2 w-100 px-2">
+        <span>© {{ year }} Football Data</span>
+        <span>
+          Datos de
+          <a href="https://www.football-data.org" target="_blank" rel="noopener" class="text-primary">
+            football-data.org
+          </a>
+        </span>
+      </div>
+    </v-footer>
   </v-main>
 </template>
