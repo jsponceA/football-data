@@ -37,6 +37,8 @@ x-backend-env: &backend-env
   RESEND_API_KEY: ${RESEND_API_KEY:-}
   TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
   SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-password}
+  DOCS_USER: ${DOCS_USER:-docs}
+  DOCS_PASSWORD: ${DOCS_PASSWORD:-}
 
 services:
   db:

@@ -10,7 +10,20 @@ hacer cada persona según su rol. Es la solución a la prueba técnica de Senior
 - **SPA:** Vue 3 con TypeScript, Vuetify, Pinia y CASL. Se puede instalar como aplicación (PWA).
 - **Todo junto:** un `compose.yml` levanta la base de datos, la API y la SPA con un solo comando.
 
+Versiones principales:
+
+| Pieza | Versión |
+| --- | --- |
+| PHP | 8.5 |
+| Laravel y Passport | 13 |
+| PostgreSQL | 18 |
+| Vue y Vue Router | 3.5 y 5 |
+| Vuetify, Pinia y CASL | 4, 4 y 7 |
+| TypeScript y Node | 6 y 22 |
+
 ## Contenido
+
+- [Estructura del repositorio](#estructura-del-repositorio)
 
 1. [Cómo ejecutarlo](#1-cómo-ejecutarlo)
 2. [Usuarios de prueba](#2-usuarios-de-prueba)
@@ -55,7 +68,8 @@ docker compose up --build
 ```
 
 La primera vez tarda unos minutos porque construye las imágenes. Al arrancar, el contenedor de la API crea las llaves
-de Passport, ejecuta las migraciones y carga los seeders sin que tengas que hacer nada más.
+de Passport, ejecuta las migraciones y carga los seeders sin que tengas que hacer nada más. Los seeders solo corren
+cuando la base de datos está vacía, así que reiniciar los contenedores no restablece las contraseñas de los usuarios.
 
 | Qué | Dirección |
 | --- | --- |
@@ -146,6 +160,7 @@ Las que importan:
 | `FRONTEND_URL` | Dirección de la SPA. Es el único origen que acepta CORS y a donde apuntan los enlaces de los correos |
 | `SEED_USER_PASSWORD` | Contraseña de los usuarios de prueba |
 | `MAIL_MAILER` | `log` no envía nada; `resend` envía de verdad (necesita `RESEND_API_KEY` y un remitente verificado) |
+| `DOCS_USER` y `DOCS_PASSWORD` | Usuario (por defecto `docs`) y contraseña para abrir `/docs/api` en producción. Sin contraseña, la documentación queda cerrada |
 | `TURNSTILE_SECRET` y `VITE_TURNSTILE_SITE_KEY` | Captcha de Cloudflare en registro y recuperar contraseña. Vacíos, queda apagado |
 
 ## 4. Pruebas
@@ -161,7 +176,7 @@ npm run test:unit
 npm run type-check
 ```
 
-La API tiene 128 pruebas y la SPA 122. Las de la API cubren el login y los permisos de cada ruta por rol, la
+La API tiene 136 pruebas y la SPA 122. Las de la API cubren el login y los permisos de cada ruta por rol, la
 importación (que no duplique registros y qué responde cuando falta cupo o falla el servicio externo), el limitador, el
 cliente de football-data, la paginación, el registro y el restablecimiento de contraseña. Las de la SPA cubren las
 validaciones, el guardián de rutas, el cierre de sesión por token vencido y los componentes que más lógica tienen.
@@ -171,10 +186,17 @@ revisión de tipos y la compilación (`.github/workflows/ci.yml`).
 
 ## 5. La API
 
-Con `APP_ENV=local` (el valor por defecto de los ejemplos) la documentación interactiva está en `/docs/api`. Se
-genera sola a partir de las rutas, las validaciones y los resources. En producción queda cerrada.
+La documentación interactiva está en `/docs/api` (y la especificación OpenAPI en `/docs/api.json`). Se genera sola a
+partir de las rutas, las validaciones y los resources.
+
+- Con `APP_ENV=local`, el valor por defecto de los ejemplos, se abre sin pedir nada.
+- Con `APP_ENV=production` queda cerrada. Para abrirla, pon una contraseña en `DOCS_PASSWORD`: el navegador pedirá el
+  usuario (`docs` por defecto, se cambia con `DOCS_USER`) y esa contraseña. Si la contraseña está vacía, nadie entra.
 
 Todas las rutas van bajo `/api` y, salvo las públicas, piden el token en `Authorization: Bearer <token>`.
+
+Los listados vienen paginados (`page` y `per_page`, hasta 100 por página). Los de equipos y jugadores aceptan además
+`search`; los equipos se pueden filtrar con `competition` y los jugadores con `team`.
 
 | Método y ruta | Permiso | Qué hace |
 | --- | --- | --- |
@@ -332,7 +354,8 @@ El mismo `compose.yml` sirve para un servidor. La SPA y la API van en dominios d
 1. En el `.env`: pon las dos URLs reales en `APP_URL` y `FRONTEND_URL`, `APP_ENV=production`, contraseñas propias
    en `POSTGRES_PASSWORD` y `SEED_USER_PASSWORD`, y descomenta `BIND_ADDRESS=127.0.0.1` y `RESTART_POLICY`.
    Con `BIND_ADDRESS` los contenedores solo escuchan en el propio servidor. Si el servidor ya usa los puertos 8080 u
-   8000, cámbialos con `FRONT_PORT` y `API_PORT`.
+   8000, cámbialos con `FRONT_PORT` y `API_PORT`. Si quieres ver la documentación de la API en el servidor, pon
+   también `DOCS_PASSWORD` (ver [La API](#5-la-api)).
 2. `docker compose up -d --build`.
 3. En el Nginx del servidor, un sitio por dominio que reenvíe al puerto que corresponda:
 
@@ -351,6 +374,9 @@ server {
 
 Si pones Cloudflare delante, usa el modo SSL "Full (strict)", y en el Nginx del servidor restaura la IP real de quien
 visita (`real_ip_header CF-Connecting-IP`). Si no, el limitador de intentos de login vería siempre la IP de Cloudflare.
+
+Para que la PWA reciba las versiones nuevas, el servicio de caché no debe guardar `/sw.js` ni `/manifest.webmanifest`.
+Nginx ya los entrega con `no-cache`; si usas Cloudflare, comprueba que no los marque como `HIT`.
 
 Para actualizar: `git pull && docker compose up -d --build`. Las variables `VITE_` se escriben al compilar la SPA, por
 eso hay que reconstruir si cambian.

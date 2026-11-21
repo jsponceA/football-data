@@ -60,6 +60,10 @@ return [
     // contraseña de los usuarios de prueba que crean los seeders (admin@example.com y consulta@example.com)
     'seed_password' => env('SEED_USER_PASSWORD', 'password'),
 
+    // usuario y contraseña para abrir /docs/api fuera de local; sin contraseña la documentación queda cerrada
+    'docs_user' => env('DOCS_USER', 'docs'),
+    'docs_password' => env('DOCS_PASSWORD'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

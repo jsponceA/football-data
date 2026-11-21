@@ -1,6 +1,6 @@
 <?php
 
-use Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess;
+use App\Http\Middleware\DocsAccess;
 
 return [
     /*
@@ -172,7 +172,9 @@ return [
 
     'middleware' => [
         'web',
-        RestrictedDocsAccess::class,
+        // con tope de intentos, porque en producción la contraseña se puede probar a ciegas
+        'throttle:20,1',
+        DocsAccess::class,
     ],
 
     'extensions' => [],
