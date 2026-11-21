@@ -10,10 +10,12 @@
     "license": "MIT",
     "require": {
         "php": "^8.5",
+        "dedoc/scramble": "^0.13.55",
         "laravel/framework": "^13.17",
         "laravel/passport": "^13.0",
         "laravel/tinker": "^3.0",
-        "laraveles/spanish": "^1.5"
+        "laraveles/spanish": "^1.5",
+        "spatie/laravel-permission": "^8.5"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
