@@ -19,11 +19,7 @@ class TeamResource extends JsonResource
             'venue' => $this->venue,
             'founded' => $this->founded,
             'players_count' => $this->whenCounted('players'),
-            'competitions' => $this->whenLoaded('competitions', fn () => $this->competitions->map(fn ($c) => [
-                'id' => $c->external_id,
-                'code' => $c->code,
-                'name' => $c->name,
-            ])),
+            'competitions' => CompetitionSummaryResource::collection($this->whenLoaded('competitions')),
             'players' => PlayerResource::collection($this->whenLoaded('players')),
         ];
     }

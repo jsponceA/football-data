@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Competition;
 use App\Models\Player;
 use App\Models\Team;
 use Database\Seeders\RolePermissionSeeder;
@@ -180,6 +181,25 @@ class EndpointsTest extends TestCase
 
         $this->getJson('/api/players?team=57')->assertJsonPath('meta.total', 2);
         $this->getJson('/api/players?search=wat')->assertJsonPath('data.0.name', 'Watkins');
+    }
+
+    public function test_equipos_y_jugadores_traen_el_escudo_y_la_liga(): void
+    {
+        $team = $this->equipoConJugadores(57, 'Arsenal', ['Saka']);
+        $team->update(['crest' => 'https://crests.test/57.png']);
+        $liga = Competition::create([
+            'external_id' => 2021, 'code' => 'PL', 'name' => 'Premier League', 'type' => 'LEAGUE', 'plan' => 'TIER_ONE', 'area_name' => 'England',
+            'emblem' => 'https://crests.test/pl.png',
+        ]);
+        $team->competitions()->attach($liga);
+        $this->entrarComo('solo-consulta');
+
+        $this->getJson('/api/team')
+            ->assertJsonPath('data.0.competitions.0.emblem', 'https://crests.test/pl.png');
+
+        $this->getJson('/api/players')
+            ->assertJsonPath('data.0.team.crest', 'https://crests.test/57.png')
+            ->assertJsonPath('data.0.team.competitions.0.code', 'PL');
     }
 
     public function test_parametros_invalidos_dan_422(): void

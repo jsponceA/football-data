@@ -21,6 +21,8 @@ class PlayerResource extends JsonResource
             'team' => $this->whenLoaded('team', fn () => [
                 'id' => $this->team->external_id,
                 'name' => $this->team->name,
+                'crest' => $this->team->crest,
+                'competitions' => CompetitionSummaryResource::collection($this->team->competitions),
             ]),
         ];
     }

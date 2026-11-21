@@ -10,7 +10,7 @@ class PlayerService
     public function paginate(array $filters, int $perPage): LengthAwarePaginator
     {
         return Player::filter($filters)
-            ->with('team')
+            ->with('team.competitions')
             ->orderBy('name')
             ->paginate($perPage);
     }
