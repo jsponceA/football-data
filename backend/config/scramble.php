@@ -201,6 +201,7 @@ return [
      *     ],
      * ],
      */
-    // 'security_strategy' => \Dedoc\Scramble\SecurityDocumentation\MiddlewareAuthSecurityStrategy::class,
-    'security_strategy' => null,
+    // las rutas con middleware auth:api quedan documentadas con "Bearer", así la página de documentación
+    // muestra dónde pegar el token del login; las demás (login, registro...) se marcan como públicas
+    'security_strategy' => \Dedoc\Scramble\SecurityDocumentation\MiddlewareAuthSecurityStrategy::class,
 ];

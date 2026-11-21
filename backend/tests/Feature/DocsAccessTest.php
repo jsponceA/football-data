@@ -75,6 +75,25 @@ class DocsAccessTest extends TestCase
         $this->get('/docs/api')->assertOk();
     }
 
+    public function test_la_documentacion_declara_el_token_bearer_solo_en_las_rutas_protegidas(): void
+    {
+        config(['app.docs_password' => 'clave-de-prueba']);
+
+        $doc = $this->withHeaders($this->conClave('clave-de-prueba'))->get('/docs/api.json')->assertOk()->json();
+
+        // hay un esquema de autenticación Bearer que la página de documentación usa para pedir el token
+        $esquemas = collect($doc['components']['securitySchemes'] ?? []);
+        $this->assertTrue($esquemas->contains(fn ($e) => $e['type'] === 'http' && $e['scheme'] === 'bearer'));
+
+        // se exige en todo el documento, y las rutas públicas (login, registro...) se marcan como sin autenticación
+        $this->assertNotEmpty($doc['security'] ?? []);
+        $this->assertSame([], $doc['paths']['/login']['post']['security'] ?? null);
+        $this->assertSame([], $doc['paths']['/register']['post']['security'] ?? null);
+        // y las protegidas no la anulan
+        $this->assertArrayNotHasKey('security', $doc['paths']['/me']['get']);
+        $this->assertArrayNotHasKey('security', $doc['paths']['/competitions']['get']);
+    }
+
     public function test_la_clave_de_la_documentacion_no_abre_las_rutas_protegidas(): void
     {
         config(['app.docs_password' => 'clave-de-prueba']);

@@ -207,7 +207,7 @@ npm run test:unit
 npm run type-check
 ```
 
-La API tiene 136 pruebas y la SPA 122. Las de la API cubren el login y los permisos de cada ruta por rol, la
+La API tiene 137 pruebas y la SPA 122. Las de la API cubren el login y los permisos de cada ruta por rol, la
 importación (que no duplique registros y qué responde cuando falta cupo o falla el servicio externo), el limitador, el
 cliente de football-data, la paginación, el registro y el restablecimiento de contraseña. Las de la SPA cubren las
 validaciones, el guardián de rutas, el cierre de sesión por token vencido y los componentes que más lógica tienen.
