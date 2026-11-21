@@ -1,0 +1,91 @@
+# Levanta todo el proyecto: PostgreSQL, el API (PHP 8.5-FPM) y la SPA, servidos por un Nginx.
+#
+#   cp .env.example .env     (y poner FOOTBALL_DATA_TOKEN)
+#   docker compose up --build
+#   -> SPA http://localhost:8080   |   API http://localhost:8000/api
+#
+# El mismo archivo sirve para el VPS: solo cambia el .env (dominios, puertos en 127.0.0.1, contraseñas).
+# El HTTPS lo pone el Nginx del servidor; ver el README.
+name: football-data
+
+x-backend-env: &backend-env
+  APP_NAME: ${APP_NAME:-Football Data}
+  APP_ENV: ${APP_ENV:-local}
+  APP_DEBUG: ${APP_DEBUG:-false}
+  # vacía: el contenedor genera una y la guarda en su volumen
+  APP_KEY: ${APP_KEY:-}
+  # dirección pública de la API (de aquí salen las URL de las fotos) y de la SPA (enlaces de los correos y CORS)
+  APP_URL: ${APP_URL:-http://localhost:8000}
+  FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+  APP_LOCALE: es
+  # los registros salen por stderr: se leen con "docker compose logs app"
+  LOG_CHANNEL: stderr
+  LOG_LEVEL: ${LOG_LEVEL:-debug}
+  DB_CONNECTION: pgsql
+  DB_HOST: db
+  DB_PORT: 5432
+  DB_DATABASE: ${POSTGRES_DB:-db_football}
+  DB_USERNAME: ${POSTGRES_USER:-football}
+  DB_PASSWORD: ${POSTGRES_PASSWORD:-football}
+  SESSION_DRIVER: database
+  CACHE_STORE: database
+  QUEUE_CONNECTION: database
+  FOOTBALL_DATA_TOKEN: ${FOOTBALL_DATA_TOKEN:-}
+  MAIL_MAILER: ${MAIL_MAILER:-log}
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@example.com}
+  MAIL_FROM_NAME: ${APP_NAME:-Football Data}
+  RESEND_API_KEY: ${RESEND_API_KEY:-}
+  TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
+  SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-password}
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: ${RESTART_POLICY:-no}
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-db_football}
+      POSTGRES_USER: ${POSTGRES_USER:-football}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-football}
+    volumes:
+      # PostgreSQL 18 guarda los datos en una subcarpeta de /var/lib/postgresql
+      - db_data:/var/lib/postgresql
+    # no se publica ningún puerto: solo el backend, dentro de la red de Docker, llega a la base de datos
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: ./backend
+    restart: ${RESTART_POLICY:-no}
+    environment: *backend-env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # claves de Passport, fotos de perfil y registros: sobreviven a recrear el contenedor
+      - app_storage:/var/www/html/storage
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        # la SPA se compila apuntando a la API; si cambia APP_URL hay que volver a construir (--build)
+        VITE_API_URL: ${APP_URL:-http://localhost:8000}/api
+        VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY:-}
+    restart: ${RESTART_POLICY:-no}
+    depends_on:
+      - app
+    ports:
+      # en el VPS BIND_ADDRESS=127.0.0.1: así solo el Nginx del servidor llega a estos puertos
+      - "${BIND_ADDRESS:-0.0.0.0}:${FRONT_PORT:-8080}:80"
+      - "${BIND_ADDRESS:-0.0.0.0}:${API_PORT:-8000}:8000"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      # Nginx sirve las fotos directamente, en solo lectura
+      - app_storage:/var/www/storage:ro
+
+volumes:
+  db_data:
+  app_storage:

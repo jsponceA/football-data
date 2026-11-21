@@ -1,0 +1,8 @@
+# el .env local apunta a mi API de desarrollo y no debe colarse en la compilación
+.env
+.env.*
+!.env.example
+.git
+node_modules
+dist
+coverage

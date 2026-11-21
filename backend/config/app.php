@@ -57,6 +57,9 @@ return [
     // dónde vive la SPA: los enlaces de los correos (restablecer contraseña) apuntan ahí, no a la API
     'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
 
+    // contraseña de los usuarios de prueba que crean los seeders (admin@example.com y consulta@example.com)
+    'seed_password' => env('SEED_USER_PASSWORD', 'password'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

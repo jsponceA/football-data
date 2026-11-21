@@ -1,0 +1,13 @@
+# nada de esto debe entrar a la imagen: son secretos, dependencias que se instalan dentro o datos locales
+.env
+.env.*
+!.env.example
+.git
+vendor
+node_modules
+tests
+.phpunit.cache
+
+# la carpeta storage vive en un volumen (claves de Passport, fotos, logs); el Dockerfile crea su estructura
+storage
+bootstrap/cache/*.php
