@@ -23,6 +23,8 @@ onMounted(async () => {
       // el token vence a los 5 minutos y no se puede reutilizar: se pide otro
       'expired-callback': () => (token.value = ''),
       'error-callback': () => (token.value = ''),
+      // un desafío interactivo que nadie resolvió a tiempo
+      'timeout-callback': () => (token.value = ''),
     })
   } catch {
     // sin red a Cloudflare no hay widget; el backend responderá que falta la verificación

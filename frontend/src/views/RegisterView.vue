@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import type { SubmitEventPromise } from 'vuetify'
 import AuthShell from '@/components/AuthShell.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
+import { useCaptcha } from '@/composables/useCaptcha'
 import { useFormSubmit } from '@/composables/useFormSubmit'
 import { useNotify } from '@/composables/useNotify'
 import { useAuthStore } from '@/stores/auth'
@@ -15,21 +16,23 @@ const { notify } = useNotify()
 
 const form = reactive({ name: '', email: '', password: '', confirm: '' })
 const showPassword = ref(false)
-const captcha = ref('')
-const widget = ref<InstanceType<typeof TurnstileWidget> | null>(null)
+const { token: captcha, widget, require: requireCaptcha, renew: renewCaptcha } = useCaptcha()
 const { loading, error, fieldErrors, handleSubmit } = useFormSubmit()
 
 const minPassword = minLength(8)
 const sameAsPassword = (value: string) => value === form.password || 'Las contraseñas no coinciden.'
 
 async function submit(event: SubmitEventPromise) {
+  let sent = false
   const ok = await handleSubmit(event, async () => {
+    requireCaptcha()
+    sent = true
     await auth.register(form.name, form.email, form.password, form.confirm, captcha.value)
     notify('Cuenta creada. ¡Bienvenido!')
     router.push({ name: 'home' })
   })
-  // el token del captcha sirve una sola vez, aunque el envío haya fallado
-  if (!ok) widget.value?.reset()
+  // el token ya se gastó en la petición, haya salido bien o no; si no llegó a salir, sigue valiendo
+  if (!ok && sent) renewCaptcha()
 }
 </script>
 
