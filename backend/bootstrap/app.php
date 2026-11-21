@@ -23,6 +23,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // detrás de Nginx (y de otro Nginx en el servidor) la IP del cliente llega en X-Forwarded-For;
+        // sin esto todos los visitantes compartirían el mismo límite de intentos por minuto.
+        // Solo se confía en redes privadas (Docker, localhost): con "*" Laravel tomaría la IP más a la
+        // izquierda de la cadena, que el visitante puede inventar para saltarse el límite.
+        $middleware->trustProxies(at: ['127.0.0.1', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16']);
+
         $middleware->alias([
             'active' => EnsureUserIsActive::class,
             'role' => RoleMiddleware::class,
