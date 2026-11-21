@@ -16,6 +16,13 @@ export interface SessionUser {
   abilities: AbilityRule[]
 }
 
+export interface CompetitionBrief {
+  id: number
+  code: string
+  name: string
+  emblem: string | null
+}
+
 export interface Competition {
   id: number
   code: string
@@ -37,7 +44,7 @@ export interface Team {
   venue: string | null
   founded: number | null
   players_count?: number
-  competitions?: { id: number; code: string; name: string }[]
+  competitions?: CompetitionBrief[]
   players?: Player[]
 }
 
@@ -48,7 +55,7 @@ export interface Player {
   shirt_number: number | null
   date_of_birth: string | null
   nationality: string | null
-  team?: { id: number; name: string }
+  team?: { id: number; name: string; crest: string | null; competitions: CompetitionBrief[] }
 }
 
 export interface ManagedUser {

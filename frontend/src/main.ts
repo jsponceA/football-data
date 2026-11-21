@@ -3,6 +3,7 @@ import { createApp } from 'vue'
 // Vuetify
 import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
+import 'flag-icons/css/flag-icons.min.css'
 import { createVuetify } from 'vuetify'
 import { es } from 'vuetify/locale'
 import * as components from 'vuetify/components'
@@ -11,6 +12,7 @@ import * as directives from 'vuetify/directives'
 // va después de Vuetify para que mis reglas ganen cuando empatan en especificidad
 import './assets/css/login.css'
 import './assets/css/crud.css'
+import './assets/css/cards.css'
 
 import { createPinia } from 'pinia'
 import { createPersistedState } from 'pinia-plugin-persistedstate'

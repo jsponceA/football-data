@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { useAbility } from '@casl/vue'
 import SettingsDrawer from '@/components/SettingsDrawer.vue'
@@ -14,6 +14,7 @@ import type { AppAbility } from '@/plugins/ability'
 const auth = useAuthStore()
 const ui = useUiStore()
 const router = useRouter()
+const route = useRoute()
 const { mobile } = useDisplay()
 const { can } = useAbility<AppAbility>()
 
@@ -33,6 +34,11 @@ function toggleMenu() {
 
 const settings = ref(false)
 const year = new Date().getFullYear()
+
+// los detalles (/teams/1) son rutas hermanas de la lista, no hijas, así que el router no las marca activas solo
+function isActive(sectionRoute: string) {
+  return route.name === sectionRoute || route.meta.section === sectionRoute
+}
 
 const visibleSections = computed(() => sections.filter((s) => can(s.ability.action, s.ability.subject)))
 
@@ -57,6 +63,7 @@ async function logout() {
         v-for="section in visibleSections"
         :key="section.route"
         :to="{ name: section.route }"
+        :active="isActive(section.route)"
         :prepend-icon="section.icon"
         :title="section.title"
         rounded="lg"

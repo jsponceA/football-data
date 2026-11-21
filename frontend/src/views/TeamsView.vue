@@ -2,13 +2,13 @@
 import { onMounted, ref } from 'vue'
 import { useAbility } from '@casl/vue'
 import { getCompetitions, getTeams } from '@/api/football'
-import CrudTable from '@/components/CrudTable.vue'
 import DataState from '@/components/DataState.vue'
 import FilterBar from '@/components/FilterBar.vue'
 import FilterField from '@/components/FilterField.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import PerPageSelect from '@/components/PerPageSelect.vue'
+import TeamCard from '@/components/TeamCard.vue'
 import { usePaginatedList } from '@/composables/usePaginatedList'
 import type { AppAbility } from '@/plugins/ability'
 
@@ -62,54 +62,21 @@ onMounted(async () => {
     :error="error"
     :empty="items.length === 0"
     :empty-title="filtered ? 'Sin coincidencias' : 'Todavía no hay equipos'"
-    :empty-text="filtered ? 'Prueba con otros filtros.' : 'Abre una liga en la sección Ligas para importar sus equipos.'"
+    :empty-text="filtered ? 'Prueba con otros filtros.' : 'Abre una liga en la sección Ligas para cargar sus equipos.'"
     empty-icon="mdi-shield-off-outline"
+    skeleton="teams"
     @retry="load"
   >
     <div class="mb-3">
       <PerPageSelect v-model="perPage" />
     </div>
 
-    <CrudTable :loading="loading">
-      <thead>
-        <tr>
-          <th>Acciones</th>
-          <th>Equipo</th>
-          <th>Abrev.</th>
-          <th>Estadio</th>
-          <th>Fundado</th>
-          <th class="text-right">Jugadores</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="team in items" :key="team.id">
-          <td>
-            <div class="row-actions">
-              <v-btn
-                icon="mdi-eye-outline"
-                size="x-small"
-                variant="tonal"
-                color="info"
-                rounded="lg"
-                :to="{ name: 'team', params: { id: team.id } }"
-                :aria-label="`Ver ${team.name}`"
-              />
-            </div>
-          </td>
-          <td class="text-no-wrap">
-            <v-avatar rounded="0" size="28" class="mr-2">
-              <v-img v-if="team.crest" :src="team.crest" :alt="team.name" contain />
-              <v-icon v-else icon="mdi-shield-half-full" />
-            </v-avatar>
-            {{ team.name }}
-          </td>
-          <td>{{ team.tla ?? '—' }}</td>
-          <td>{{ team.venue ?? '—' }}</td>
-          <td>{{ team.founded ?? '—' }}</td>
-          <td class="text-right">{{ team.players_count ?? 0 }}</td>
-        </tr>
-      </tbody>
-    </CrudTable>
+    <v-progress-linear :active="loading" indeterminate class="mb-2" />
+    <v-row>
+      <v-col v-for="team in items" :key="team.id" cols="12" sm="6" md="4" xl="3">
+        <TeamCard :team="team" />
+      </v-col>
+    </v-row>
     <PaginationBar v-model="page" :meta="meta" />
   </DataState>
 </template>

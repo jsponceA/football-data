@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { getPlayers } from '@/api/football'
-import CrudTable from '@/components/CrudTable.vue'
 import DataState from '@/components/DataState.vue'
 import FilterBar from '@/components/FilterBar.vue'
 import FilterField from '@/components/FilterField.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
+import PlayerCard from '@/components/PlayerCard.vue'
 import PerPageSelect from '@/components/PerPageSelect.vue'
 import { usePaginatedList } from '@/composables/usePaginatedList'
-import { formatDate, positionLabel } from '@/utils/format'
 
 const { items, meta, page, perPage, filters, filtered, loading, error, load, apply, clear } =
   usePaginatedList(getPlayers, { search: '' })
@@ -35,34 +34,21 @@ const { items, meta, page, perPage, filters, filtered, loading, error, load, app
     :error="error"
     :empty="items.length === 0"
     :empty-title="filtered ? 'Sin coincidencias' : 'Todavía no hay jugadores'"
-    :empty-text="filtered ? 'Prueba con otro nombre.' : 'Abre una liga en la sección Ligas para importar sus jugadores.'"
+    :empty-text="filtered ? 'Prueba con otro nombre.' : 'Abre una liga en la sección Ligas para cargar sus jugadores.'"
     empty-icon="mdi-account-off-outline"
+    skeleton="players"
     @retry="load"
   >
     <div class="mb-3">
       <PerPageSelect v-model="perPage" />
     </div>
 
-    <CrudTable :loading="loading">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Equipo</th>
-          <th>Posición</th>
-          <th>Nacionalidad</th>
-          <th>Nacimiento</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="player in items" :key="player.id">
-          <td class="text-no-wrap">{{ player.name }}</td>
-          <td>{{ player.team?.name ?? '—' }}</td>
-          <td>{{ positionLabel(player.position) }}</td>
-          <td>{{ player.nationality ?? '—' }}</td>
-          <td>{{ formatDate(player.date_of_birth) }}</td>
-        </tr>
-      </tbody>
-    </CrudTable>
+    <v-progress-linear :active="loading" indeterminate class="mb-2" />
+    <v-row>
+      <v-col v-for="player in items" :key="player.id" cols="12" sm="6" md="4" xl="3">
+        <PlayerCard :player="player" />
+      </v-col>
+    </v-row>
     <PaginationBar v-model="page" :meta="meta" />
   </DataState>
 </template>

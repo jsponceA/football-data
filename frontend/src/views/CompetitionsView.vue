@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { getCompetitions } from '@/api/football'
+import CountryFlag from '@/components/CountryFlag.vue'
 import DataState from '@/components/DataState.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import { usePaginatedList } from '@/composables/usePaginatedList'
-import { formatDateTime } from '@/utils/format'
+import { formatDateTime, timeAgo, typeLabel } from '@/utils/format'
 
 const { items, meta, page, loading, error, load } = usePaginatedList(getCompetitions)
 
@@ -23,7 +24,7 @@ const stale = computed(() => meta.value?.stale === true)
     :loading="loading"
     :error="error"
     :empty="items.length === 0"
-    skeleton="cards"
+    skeleton="competitions"
     empty-title="No hay ligas"
     empty-text="Todavía no se pudo cargar el listado de ligas."
     empty-icon="mdi-trophy-outline"
@@ -32,27 +33,43 @@ const stale = computed(() => meta.value?.stale === true)
     <v-progress-linear :active="loading" indeterminate class="mb-2" />
     <v-row>
       <v-col v-for="competition in items" :key="competition.id" cols="12" sm="6" md="4" xl="3">
-        <v-card :to="{ name: 'competition', params: { id: competition.id } }" height="100%">
-          <v-card-item>
-            <template #prepend>
-              <v-avatar rounded="0" size="48">
-                <v-img v-if="competition.emblem" :src="competition.emblem" :alt="competition.name" contain />
-                <v-icon v-else icon="mdi-trophy" />
-              </v-avatar>
-            </template>
-            <v-card-title>{{ competition.name }}</v-card-title>
-            <v-card-subtitle>{{ competition.area ?? '—' }}</v-card-subtitle>
-          </v-card-item>
-          <v-card-text class="d-flex flex-wrap align-center ga-2">
-            <v-chip size="small" label>{{ competition.code }}</v-chip>
-            <v-chip
-              size="small"
-              :color="competition.imported_at ? 'success' : undefined"
-              :prepend-icon="competition.imported_at ? 'mdi-check' : 'mdi-cloud-download-outline'"
+        <v-card :to="{ name: 'competition', params: { id: competition.id } }" border flat class="competition-card" height="100%">
+          <div class="d-flex align-center ga-4 pa-4">
+            <div class="emblem-tile">
+              <img v-if="competition.emblem" :src="competition.emblem" :alt="competition.name" />
+              <v-icon v-else icon="mdi-trophy" color="grey" />
+            </div>
+            <div class="flex-grow-1 overflow-hidden">
+              <div class="text-subtitle-1 font-weight-medium text-truncate" :title="competition.name">
+                {{ competition.name }}
+              </div>
+              <div class="text-body-2 text-medium-emphasis text-truncate">
+                <CountryFlag :name="competition.area" label />
+              </div>
+            </div>
+          </div>
+          <v-divider />
+          <div class="d-flex align-center ga-2 px-4 py-2 text-caption">
+            <v-chip size="x-small" label>{{ competition.code }}</v-chip>
+            <v-chip size="x-small" label variant="tonal">{{ typeLabel(competition.type) }}</v-chip>
+            <v-spacer />
+            <span
+              v-if="competition.imported_at"
+              class="d-flex align-center ga-1 text-success"
+              :title="`Datos actualizados el ${formatDateTime(competition.imported_at)}`"
             >
-              {{ competition.imported_at ? `Importada ${formatDateTime(competition.imported_at)}` : 'Sin importar' }}
-            </v-chip>
-          </v-card-text>
+              <v-icon icon="mdi-check-circle-outline" size="16" />
+              Actualizada {{ timeAgo(competition.imported_at) }}
+            </span>
+            <span
+              v-else
+              class="d-flex align-center ga-1 text-medium-emphasis"
+              title="Los equipos y jugadores se descargan al abrir la liga"
+            >
+              <v-icon icon="mdi-cloud-download-outline" size="16" />
+              Sin datos aún
+            </span>
+          </div>
         </v-card>
       </v-col>
     </v-row>

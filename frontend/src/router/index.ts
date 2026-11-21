@@ -10,6 +10,8 @@ declare module 'vue-router' {
     // solo para visitantes (login)
     guest?: boolean
     title?: string
+    // ruta del menú que debe verse activa cuando esta página es un detalle de esa sección
+    section?: string
     ability?: { action: Action; subject: Subject }
   }
 }
@@ -44,7 +46,7 @@ const router = createRouter({
           name: 'competition',
           component: () => import('@/views/CompetitionDetailView.vue'),
           props: (route) => ({ id: Number(route.params.id) }),
-          meta: { title: 'Liga', ability: { action: 'view', subject: 'competitions' } },
+          meta: { title: 'Liga', section: 'competitions', ability: { action: 'view', subject: 'competitions' } },
         },
         {
           path: 'teams',
@@ -57,7 +59,7 @@ const router = createRouter({
           name: 'team',
           component: () => import('@/views/TeamDetailView.vue'),
           props: (route) => ({ id: Number(route.params.id) }),
-          meta: { title: 'Equipo', ability: { action: 'view', subject: 'teams' } },
+          meta: { title: 'Equipo', section: 'teams', ability: { action: 'view', subject: 'teams' } },
         },
         {
           path: 'players',
